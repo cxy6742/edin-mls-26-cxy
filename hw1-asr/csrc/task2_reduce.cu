@@ -73,9 +73,15 @@ __global__ void softmax_kernel(const float* x, float* y, int cols) {
       MaxSum single = {xr[c], 1.0f};
       local = maxsum_merge(local, single);
   }
-  MaxSum global = block_reduce_maxsum(local);
-  row_max = global.m;
-  row_sum = global.l;
+  row_max = block_reduce_max(local.m);
+  float adjusted_sum = 0.0f;
+
+  if (local.l > 0.0f) {
+      float correction = expf(local.m - row_max);
+      adjusted_sum = local.l * correction;
+  }
+  row_sum = block_reduce_sum(adjusted_sum);
+
   // ============================================================
 
   // ======================== BLANK 2.7 =========================
