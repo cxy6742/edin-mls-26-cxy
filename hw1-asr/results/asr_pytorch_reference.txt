@@ -1,0 +1,16 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+GPU: NVIDIA H200 MIG 1g.18gb (sm_90)
+Kernels: rope=torch  reduce=torch  gemm=torch  attention=torch  provided=torch
+Loading the model (about 9 GB of float32 weights)...
+Loaded in 121.2 s
+Audio: 3.50 s, mel features (1, 128, 3000), prompt 59 tokens
+  run 1:   1338.1 ms  (13 tokens)
+  run 2:   1337.6 ms  (13 tokens)
+  run 3:   1337.5 ms  (13 tokens)
+
+Time: 1337.7 ms per transcription (+/- 0.2 ms), 102.9 ms per token
+Peak GPU memory: 8.90 GiB
+Transcription: Concord returned to its place amidst the tents.
+Expected:      Concord returned to its place amidst the tents
+Accuracy: 100.0%
+Status: PASS
