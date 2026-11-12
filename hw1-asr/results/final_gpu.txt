@@ -1,0 +1,2 @@
+GPU 0: NVIDIA H200 (UUID: GPU-6096d4d6-542b-1e8d-ea2a-4c1eeeef9c83)
+  MIG 1g.18gb     Device  0: (UUID: MIG-5568fc7f-827c-5594-bb30-b8ff1763002d)

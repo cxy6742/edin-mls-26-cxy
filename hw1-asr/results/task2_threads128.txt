@@ -1,0 +1,18 @@
+nvcc -O3 -std=c++17 -lineinfo -diag-suppress 177 -arch=sm_90 -Xcompiler -fPIC -Icsrc -c csrc/task2_reduce.cu -o build/task2_only/obj/task2_reduce.o
+nvcc -O3 -std=c++17 -lineinfo -diag-suppress 177 -arch=sm_90 -Xcompiler -fPIC -Icsrc tests/test_task2_reduce.cu build/task2_only/obj/task2_reduce.o -o build/task2_only/test_task2_reduce -lcublas -Xlinker -rpath -Xlinker /opt/cuda-12.8.0/lib64
+build/task2_only/test_task2_reduce
+GPU: NVIDIA H200 MIG 1g.18gb (sm_90), 16 SMs, peak memory bandwidth about 563 GB/s
+
+rmsnorm, one short row               PASS  max_err=8.27e-08     0.002 ms      0.1 GB/s ( 0% of peak)
+rmsnorm, odd cols                    PASS  max_err=3.51e-07     0.005 ms      8.6 GB/s ( 2% of peak)
+rmsnorm, text decoder                PASS  max_err=4.18e-07     0.008 ms    135.7 GB/s (24% of peak)
+layernorm, odd cols (example)        PASS  max_err=3.91e-07     0.006 ms      7.3 GB/s ( 1% of peak)
+layernorm, audio encoder             PASS  max_err=5.17e-07     0.057 ms    271.3 GB/s (48% of peak)
+softmax, one short row               PASS  max_err=1.11e-08     0.003 ms      0.0 GB/s ( 0% of peak)
+softmax, odd cols                    PASS  max_err=1.04e-09     0.005 ms      5.3 GB/s ( 1% of peak)
+softmax, large inputs (+-100)        PASS  max_err=1.89e-08     0.005 ms      3.2 GB/s ( 1% of peak)
+softmax, all negative (-200..-150)   PASS  max_err=6.11e-09     0.003 ms      1.6 GB/s ( 0% of peak)
+softmax, vocabulary row (59264)      PASS  max_err=1.35e-10     0.190 ms      2.5 GB/s ( 0% of peak)
+softmax, 64 x 4096                   PASS  max_err=8.85e-10     0.013 ms    167.1 GB/s (30% of peak)
+
+Task 2 (reductions): ALL PASS
