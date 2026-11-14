@@ -29,7 +29,12 @@ def read_rows(path: Path) -> list[dict]:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--k", type=int, choices=[2, 5, 10, 20], required=True)
-    parser.add_argument("--method", choices=["bm25", "cross-encoder"], default="bm25")
+    parser.add_argument(
+        "--method",
+        choices=["bm25", "cross-encoder", "dense-bm25"],
+        default="bm25",
+    )
+    parser.add_argument("--alpha", type=float, default=0.5)
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--model", default=None)
     parser.add_argument("--output", type=Path, required=True)
@@ -41,6 +46,8 @@ def main():
     baseline_ids = [row["query_id"] for row in baseline]
     if len(baseline_ids) != 350 or len(set(baseline_ids)) != 350:
         raise ValueError("Expected 350 unique baseline queries")
+    if args.method == "dense-bm25" and not 0.0 <= args.alpha <= 1.0:
+        raise ValueError("alpha must be in [0, 1]")
 
     saved = read_rows(args.output) if args.output.exists() else []
     if len(saved) > len(baseline):
@@ -52,6 +59,10 @@ def main():
             or previous["transcript"] != original["transcript"]
             or previous.get("k") != args.k
             or previous.get("rerank_method") != args.method
+            or (
+                args.method == "dense-bm25"
+                and previous.get("fusion_alpha") != args.alpha
+            )
             or len(previous["retrieved_record_ids"]) != args.k
             or len(previous["first_stage_record_ids"]) != args.k
             or set(previous["retrieved_record_ids"]) != set(previous["first_stage_record_ids"])
@@ -77,12 +88,14 @@ def main():
         data.records,
         device=args.device,
         model_name=args.model,
+        alpha=args.alpha,
     )
     builder = SimpleContextBuilder()
     generator = ELMGenerator()
 
     print(
-        f"k={args.k}, method={args.method}, model={generator.model}, "
+        f"k={args.k}, method={args.method}, alpha={args.alpha}, "
+        f"model={generator.model}, "
         f"temperature=0.1, encoder=enc_a, device={args.device}, "
         f"completed={len(saved)}, remaining={350 - len(saved)}",
         flush=True,
@@ -109,7 +122,12 @@ def main():
                 raise ValueError(f"Retrieval prefix mismatch: {query_id}")
 
             texts = [data.record_text(record_id) for record_id in record_ids]
-            reranked = reranker.rerank(row["transcript"], record_ids, texts)
+            reranked = reranker.rerank(
+                row["transcript"],
+                record_ids,
+                texts,
+                dense_scores=list(retrieval["scores"]),
+            )
             ordered_ids = list(reranked["record_ids"])
             if set(ordered_ids) != set(record_ids) or len(ordered_ids) != args.k:
                 raise ValueError(f"{query_id}: reranker changed the candidate set")
@@ -124,6 +142,7 @@ def main():
                 **row,
                 "k": args.k,
                 "rerank_method": args.method,
+                "fusion_alpha": args.alpha if args.method == "dense-bm25" else None,
                 "answer": answer,
                 "first_stage_record_ids": record_ids,
                 "retrieved_record_ids": ordered_ids,

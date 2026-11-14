@@ -19,6 +19,18 @@ def tokenize(text: str) -> list[str]:
     return _TOKEN.findall(text.lower())
 
 
+def minmax(values: list[float]) -> list[float]:
+    """Scale one candidate set onto [0, 1]. A constant vector stays at 0."""
+    if not values:
+        return []
+    low = min(values)
+    high = max(values)
+    if high == low:
+        return [0.0 for _ in values]
+    span = high - low
+    return [(value - low) / span for value in values]
+
+
 def reorder(record_ids: list[str], scores: list[float]) -> tuple[list[str], list[float]]:
     if len(record_ids) != len(scores):
         raise ValueError("record ids and scores must have the same length")
@@ -87,7 +99,14 @@ class BM25Reranker:
             total += idf * (tf * (self.k1 + 1.0)) / (tf + norm) * query_tf
         return float(total)
 
-    def rerank(self, query: str, record_ids: list[str], texts: list[str] | None = None) -> dict:
+    def rerank(
+        self,
+        query: str,
+        record_ids: list[str],
+        texts: list[str] | None = None,
+        dense_scores: list[float] | None = None,
+    ) -> dict:
+        del dense_scores
         if texts is not None and len(texts) != len(record_ids):
             raise ValueError("texts must align with record ids")
         start = time.perf_counter()
@@ -129,7 +148,14 @@ class CrossEncoderReranker:
         self.method = "cross-encoder"
         self.model_name = model_name
 
-    def rerank(self, query: str, record_ids: list[str], texts: list[str] | None = None) -> dict:
+    def rerank(
+        self,
+        query: str,
+        record_ids: list[str],
+        texts: list[str] | None = None,
+        dense_scores: list[float] | None = None,
+    ) -> dict:
+        del dense_scores
         if texts is None or len(texts) != len(record_ids):
             raise ValueError("cross-encoder reranking needs one text per record id")
         start = time.perf_counter()
@@ -147,6 +173,58 @@ class CrossEncoderReranker:
         }
 
 
+class DenseBM25FusionReranker:
+    """Blend the first-stage vector score with BM25 inside the selected set.
+
+    The two scores use different units, so each is min-max scaled over the n
+    candidates before mixing. ``alpha`` is the weight on the vector score:
+    1 keeps the dense order, 0 is pure BM25.
+    """
+
+    def __init__(
+        self,
+        records: dict[str, str] | None = None,
+        alpha: float = 0.5,
+        k1: float = 1.2,
+        b: float = 0.75,
+        bm25: BM25Reranker | None = None,
+    ):
+        if not 0.0 <= alpha <= 1.0:
+            raise ValueError("alpha must be in [0, 1]")
+        self.alpha = float(alpha)
+        self.bm25 = bm25 if bm25 is not None else BM25Reranker(records, k1=k1, b=b)
+        self.method = "dense-bm25"
+        self.index_build_ms = self.bm25.index_build_ms
+
+    def rerank(
+        self,
+        query: str,
+        record_ids: list[str],
+        texts: list[str] | None = None,
+        dense_scores: list[float] | None = None,
+    ) -> dict:
+        if texts is not None and len(texts) != len(record_ids):
+            raise ValueError("texts must align with record ids")
+        if dense_scores is None or len(dense_scores) != len(record_ids):
+            raise ValueError("dense-bm25 fusion needs one vector score per record id")
+        start = time.perf_counter()
+        lexical = [self.bm25.score(query, record_id) for record_id in record_ids]
+        vector_norm = minmax([float(score) for score in dense_scores])
+        lexical_norm = minmax(lexical)
+        fused = [
+            self.alpha * vector + (1.0 - self.alpha) * word
+            for vector, word in zip(vector_norm, lexical_norm)
+        ]
+        ordered_ids, ordered_scores = reorder(list(record_ids), fused)
+        return {
+            "record_ids": ordered_ids,
+            "scores": ordered_scores,
+            "latency_ms": (time.perf_counter() - start) * 1000.0,
+            "method": self.method,
+            "alpha": self.alpha,
+        }
+
+
 def build_reranker(
     method: str,
     records: dict[str, str] | None = None,
@@ -156,11 +234,16 @@ def build_reranker(
     batch_size: int = 16,
     k1: float = 1.2,
     b: float = 0.75,
+    alpha: float = 0.5,
 ):
     if method == "bm25":
         if records is None:
             raise ValueError("BM25 reranker needs the corpus records")
         return BM25Reranker(records, k1=k1, b=b)
+    if method == "dense-bm25":
+        if records is None:
+            raise ValueError("dense-bm25 fusion needs the corpus records")
+        return DenseBM25FusionReranker(records, alpha=alpha, k1=k1, b=b)
     if method == "cross-encoder":
         kwargs = {
             "device": device,

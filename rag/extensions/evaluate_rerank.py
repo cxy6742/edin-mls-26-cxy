@@ -69,7 +69,17 @@ def main():
         default=RAG_ROOT / "results/baseline_all_cpu_350_v1.jsonl",
     )
     parser.add_argument("--k", type=int, nargs="+", default=[2, 5, 10, 20])
-    parser.add_argument("--method", choices=["bm25", "cross-encoder"], default="bm25")
+    parser.add_argument(
+        "--method",
+        choices=["bm25", "cross-encoder", "dense-bm25"],
+        default="bm25",
+    )
+    parser.add_argument(
+        "--alpha",
+        type=float,
+        default=0.5,
+        help="Weight on the vector score for dense-bm25. 1 keeps dense order.",
+    )
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--model", default=None)
     parser.add_argument("--max-length", type=int, default=256)
@@ -85,6 +95,8 @@ def main():
     depths = sorted(set(args.k))
     if not depths or depths[0] < 1 or (args.limit is not None and args.limit < 1):
         parser.error("--k and --limit must be positive")
+    if args.method == "dense-bm25" and not 0.0 <= args.alpha <= 1.0:
+        parser.error("--alpha must be in [0, 1]")
     if not args.baseline.is_file():
         parser.error(f"Baseline answers not found: {args.baseline}")
 
@@ -115,6 +127,7 @@ def main():
         model_name=args.model,
         max_length=args.max_length,
         batch_size=args.batch_size,
+        alpha=args.alpha,
     )
     depth = max(depths)
     per_depth = {k: [] for k in depths}
@@ -147,6 +160,7 @@ def main():
                 transcript,
                 candidates,
                 [texts[record_id] for record_id in candidates],
+                dense_scores=list(retrieved["scores"][:k]),
             )
             ordered = list(reranked["record_ids"])
             if set(ordered) != set(candidates) or len(ordered) != k:
@@ -172,6 +186,8 @@ def main():
 
     args.output.mkdir(parents=True, exist_ok=True)
     stem = f"{args.method}_{args.split}{len(rows)}"
+    if args.method == "dense-bm25":
+        stem = f"dense-bm25_a{args.alpha:.2f}_{args.split}{len(rows)}"
     per_query_path = args.output / f"{stem}_per_query.jsonl"
     with per_query_path.open("w", encoding="utf-8") as dest:
         for k in depths:
@@ -183,6 +199,7 @@ def main():
         "queries": len(rows),
         "baseline": str(args.baseline),
         "method": args.method,
+        "alpha": args.alpha if args.method == "dense-bm25" else None,
         "model": getattr(reranker, "model_name", None),
         "encoder": "enc_a",
         "device": args.device,

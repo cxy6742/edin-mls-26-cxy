@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from extensions.rerank_core import BM25Reranker
+from extensions.rerank_core import BM25Reranker, DenseBM25FusionReranker
 from src.metrics import mrr_at_k, recall_at_k
 
 
@@ -51,6 +51,34 @@ class RerankExtensionTests(unittest.TestCase):
     def test_unknown_candidate_is_rejected(self):
         with self.assertRaises(KeyError):
             self.reranker.rerank("sales tax", ["missing"])
+
+    def test_fusion_keeps_dense_order_when_alpha_is_one(self):
+        fusion = DenseBM25FusionReranker(self.records, alpha=1.0)
+        original = ["weather", "market", "tax"]
+        result = fusion.rerank(
+            "sales tax in a retail store",
+            original,
+            dense_scores=[0.9, 0.5, 0.1],
+        )
+        self.assertEqual(result["record_ids"], original)
+        self.assertEqual(result["alpha"], 1.0)
+
+    def test_fusion_matches_bm25_when_alpha_is_zero(self):
+        fusion = DenseBM25FusionReranker(self.records, alpha=0.0)
+        original = ["weather", "market", "tax"]
+        lexical = self.reranker.rerank("sales tax in a retail store", original)
+        fused = fusion.rerank(
+            "sales tax in a retail store",
+            original,
+            dense_scores=[0.9, 0.8, 0.1],
+        )
+        self.assertEqual(fused["record_ids"], lexical["record_ids"])
+        self.assertEqual(set(fused["record_ids"]), set(original))
+
+    def test_fusion_requires_vector_scores(self):
+        fusion = DenseBM25FusionReranker(self.records, alpha=0.5)
+        with self.assertRaises(ValueError):
+            fusion.rerank("sales tax", ["tax", "weather"])
 
 
 if __name__ == "__main__":
