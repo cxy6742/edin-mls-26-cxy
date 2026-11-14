@@ -57,10 +57,65 @@ def repair_identical_explanation(raw):
     print("FORMAT REPAIR: removed identical duplicate explanation", flush=True)
     return result
 
+
+def repair_invalid_escapes(text):
+    """Double backslashes that are not valid JSON escapes.
+
+    The judge sometimes writes ``\\$`` or a truncated ``\\u`` sequence inside
+    the explanation string. ``json.loads`` reports the backslash for
+    ``Invalid \\escape`` and the ``u`` for ``Invalid \\uXXXX escape``.
+    """
+    current = text
+    for _ in range(64):
+        try:
+            json.loads(current)
+            return current
+        except json.JSONDecodeError as error:
+            if (
+                error.msg.startswith("Invalid \\escape")
+                and error.pos < len(error.doc)
+                and error.doc[error.pos] == "\\"
+            ):
+                slash = error.pos
+            elif (
+                error.msg.startswith("Invalid \\uXXXX")
+                and error.pos > 0
+                and error.doc[error.pos - 1] == "\\"
+            ):
+                slash = error.pos - 1
+            else:
+                return None
+            current = error.doc[:slash] + "\\" + error.doc[slash:]
+    return None
+
+
 def parse_control_safe(raw):
     try:
         return original_parse(raw)
     except json.JSONDecodeError as error:
+        if error.msg.startswith("Invalid \\escape") or error.msg.startswith("Invalid \\uXXXX"):
+            fixed = repair_invalid_escapes(error.doc)
+            if fixed is None:
+                raise
+            result = original_parse(fixed)
+            policy = "escape-invalid-json-backslashes"
+            audit = args.out_dir / "invalid_escape_repair_audit.jsonl"
+            record = {
+                "policy": policy,
+                "original_response": raw,
+                "repaired_response": fixed,
+                "validated_result": dict(result),
+            }
+            audit.parent.mkdir(parents=True, exist_ok=True)
+            with audit.open("a", encoding="utf-8") as stream:
+                stream.write(json.dumps(record, ensure_ascii=True) + "\n")
+            result["_format_repair"] = {
+                "policy": policy,
+                "audit_file": str(audit),
+            }
+            print("FORMAT REPAIR: escaped invalid JSON backslash", flush=True)
+            return result
+
         repaired = repair_identical_explanation(raw)
         if repaired is not None:
             return repaired
