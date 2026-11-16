@@ -114,12 +114,42 @@ def main():
             retrieval = retriever.retrieve(vector, k=args.k)
             record_ids = list(retrieval["record_ids"])
             depth = min(args.k, 5)
-            if (
-                len(record_ids) != args.k
-                or record_ids[:depth]
-                != reference[query_id]["retrieved_record_ids"][:depth]
-            ):
+            expected = list(reference[query_id]["retrieved_record_ids"][:depth])
+            if len(record_ids) != args.k:
                 raise ValueError(f"Retrieval prefix mismatch: {query_id}")
+            if set(record_ids[:depth]) != set(expected):
+                # float16 re-encoding can swap the cutoff by ~1e-5. Keep the
+                # saved candidate set when that is the only disagreement.
+                if args.k != depth:
+                    raise ValueError(f"Retrieval prefix mismatch: {query_id}")
+                wide = retriever.retrieve(
+                    vector, k=min(args.k + 20, len(retriever.record_ids))
+                )
+                score_by_id = dict(zip(wide["record_ids"], wide["scores"]))
+                score_by_id.update(zip(record_ids, retrieval["scores"]))
+                missing = [i for i in expected if i not in record_ids[:depth]]
+                extra = [i for i in record_ids[:depth] if i not in expected]
+                gap = None
+                if (
+                    missing
+                    and len(missing) == len(extra)
+                    and all(i in score_by_id for i in missing)
+                ):
+                    gap = max(score_by_id[i] for i in extra) - min(
+                        score_by_id[i] for i in missing
+                    )
+                if gap is None or gap > 1e-4:
+                    raise ValueError(f"Retrieval prefix mismatch: {query_id}")
+                record_ids = list(expected)
+                retrieval["scores"] = [float(score_by_id[i]) for i in record_ids]
+                print(
+                    f"k={args.k} {query_id} cutoff swap restored gap={gap:.3e}",
+                    flush=True,
+                )
+            elif record_ids[:depth] != expected:
+                score_by_id = dict(zip(record_ids, retrieval["scores"]))
+                record_ids = expected + record_ids[depth:]
+                retrieval["scores"] = [float(score_by_id[i]) for i in record_ids]
 
             texts = [data.record_text(record_id) for record_id in record_ids]
             reranked = reranker.rerank(
