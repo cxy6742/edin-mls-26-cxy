@@ -1,0 +1,54 @@
+Importing PyTorch and CrossEncoder...
+Loading mixedbread-ai/mxbai-rerank-large-v1 on NVIDIA H200 MIG 1g.18gb...
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+/home/s2940268/mls-rag-env/lib/python3.11/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+Loading weights:   0%|          | 0/394 [00:00<?, ?it/s]Loading weights:  10%|▉         | 38/394 [00:00<00:00, 379.50it/s]Loading weights:  19%|█▉        | 76/394 [00:00<00:01, 230.02it/s]Loading weights:  46%|████▌     | 180/394 [00:00<00:00, 502.77it/s]Loading weights:  61%|██████▏   | 242/394 [00:00<00:00, 515.83it/s]Loading weights:  85%|████████▌ | 335/394 [00:00<00:00, 634.46it/s]Loading weights: 100%|██████████| 394/394 [00:00<00:00, 564.96it/s]
+1/350 complete
+10/350 complete
+20/350 complete
+30/350 complete
+40/350 complete
+50/350 complete
+60/350 complete
+70/350 complete
+80/350 complete
+90/350 complete
+100/350 complete
+110/350 complete
+120/350 complete
+130/350 complete
+140/350 complete
+150/350 complete
+160/350 complete
+170/350 complete
+180/350 complete
+190/350 complete
+200/350 complete
+210/350 complete
+220/350 complete
+230/350 complete
+240/350 complete
+250/350 complete
+260/350 complete
+270/350 complete
+280/350 complete
+290/350 complete
+300/350 complete
+310/350 complete
+320/350 complete
+330/350 complete
+340/350 complete
+350/350 complete
+
+=== Same 350 practice queries ===
+Dense Top-5                      42.13%
+BGE 100->5                       45.58%
+Mixedbread 100->5                46.34%
+Dense+BGE Top-20 fusion          48.04%
+BGE+Mixedbread Top-100 fusion    49.77%
+Fusion vs BGE 100->5: +4.19 pp | 44 up, 289 same, 17 down | marked hits gained/lost 51/23
+Fusion vs Mixedbread 100->5: +3.43 pp | 42 up, 286 same, 22 down | marked hits gained/lost 50/28
+Fusion vs Dense+BGE Top-20 fusion: +1.72 pp | 38 up, 285 same, 27 down | marked hits gained/lost 48/39
+Median Mixedbread GPU scoring time: 1.07 s/query
+Saved per-query scores and rankings: rag/results/mxbai-fusion350-3720050.jsonl
