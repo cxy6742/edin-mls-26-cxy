@@ -1,4 +1,4 @@
-# Table 6 · Comparing rerankers on Dense Top-20 candidates
+# Comparing rerankers on Dense Top-20 candidates
 
 All four configurations use the same 350 practice queries and saved ASR transcripts. Dense Top-5 passes the first five documents directly to the generator. BGE, MiniLM and Mixedbread each select five documents from the same Dense Top-20 candidate pool.
 
@@ -22,7 +22,7 @@ Each method folder contains three files used to verify its row.
 Follow the [course RAG setup](../../README.md) to install the environment and practice corpus. Run these commands from the repository root. The reranker checks that each baseline Top-5 matches the first five documents in the saved Top-20.
 
 ```bash
-T=$(dirname "$(grep -l '^# Table 6 · Comparing rerankers' rag/results/*/README.md)")
+T="rag/results/dense20_to5_rerankers"
 OUT=$(mktemp -d)
 for model in BAAI/bge-reranker-v2-m3 cross-encoder/ms-marco-MiniLM-L6-v2; do
   python "$T/scripts/rerank_top5.py" --model "$model" --device cpu \
@@ -34,14 +34,14 @@ done
 
 ## 3. Reproduce the Mixedbread whole-document result
 
-The original GPU scoring script is `scripts/run_mxbai_chunks350.sh`. Table 6 uses the `whole_top5` field in `mixedbread/mxbai-chunks350-3720077.jsonl`. The script `scripts/run_mixedbread20_whole_answer350.sh` uses that ranking for answer generation and evaluation. Check the original cluster paths in both scripts before rerunning them.
+The original GPU scoring script is `scripts/run_mxbai_chunks350.sh`. This comparison uses the `whole_top5` field in `mixedbread/mxbai-chunks350-3720077.jsonl`. The script `scripts/run_mixedbread20_whole_answer350.sh` uses that ranking for answer generation and evaluation. Check the original cluster paths in both scripts before rerunning them.
 
 ## 4. Re-evaluate the saved answers
 
 From the repository root, activate the course environment and configure the ELM credentials. Choose `dense`, `bge`, `minilm` or `mixedbread` for `method`.
 
 ```bash
-T=$(dirname "$(grep -l '^# Table 6 · Comparing rerankers' rag/results/*/README.md)")
+T="rag/results/dense20_to5_rerankers"
 method=mixedbread
 python "$T/scripts/evaluate_answers_format_safe.py" --split practice \
   --candidates "$T/$method/answers.jsonl" --repeats 5 \
