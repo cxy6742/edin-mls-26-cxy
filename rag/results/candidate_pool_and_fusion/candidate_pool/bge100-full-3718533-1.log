@@ -1,0 +1,53 @@
+Task 1: loading BGE for 50 queries
+Loading weights:   0%|          | 0/393 [00:00<?, ?it/s]Loading weights:   0%|          | 1/393 [00:00<02:37,  2.49it/s]Loading weights:   3%|▎         | 10/393 [00:00<00:16, 23.28it/s]Loading weights:   6%|▌         | 23/393 [00:00<00:07, 48.79it/s]Loading weights:  10%|█         | 40/393 [00:00<00:04, 80.23it/s]Loading weights:  16%|█▌        | 62/393 [00:00<00:02, 110.90it/s]Loading weights:  19%|█▉        | 76/393 [00:01<00:06, 45.79it/s] Loading weights:  23%|██▎       | 91/393 [00:01<00:05, 57.25it/s]Loading weights:  27%|██▋       | 106/393 [00:01<00:04, 67.56it/s]Loading weights:  31%|███       | 121/393 [00:02<00:04, 67.46it/s]Loading weights:  37%|███▋      | 146/393 [00:02<00:02, 93.74it/s]Loading weights:  40%|████      | 159/393 [00:02<00:02, 80.70it/s]Loading weights:  43%|████▎     | 170/393 [00:03<00:05, 41.63it/s]Loading weights:  52%|█████▏    | 205/393 [00:03<00:03, 58.76it/s]Loading weights:  54%|█████▍    | 214/393 [00:03<00:03, 58.27it/s]Loading weights:  61%|██████▏   | 241/393 [00:03<00:01, 78.53it/s]Loading weights:  65%|██████▍   | 254/393 [00:03<00:01, 80.63it/s]Loading weights:  68%|██████▊   | 269/393 [00:04<00:01, 90.22it/s]Loading weights:  73%|███████▎  | 286/393 [00:04<00:01, 102.28it/s]Loading weights:  76%|███████▌  | 299/393 [00:04<00:00, 100.62it/s]Loading weights:  83%|████████▎ | 325/393 [00:04<00:00, 110.30it/s]Loading weights:  91%|█████████▏| 359/393 [00:04<00:00, 150.34it/s]Loading weights:  96%|█████████▌| 376/393 [00:04<00:00, 140.81it/s]Loading weights: 100%|██████████| 393/393 [00:04<00:00, 82.05it/s] 
+1/50 q_6bad44e0fc7965d0
+2/50 q_8b27cfeb228ef5b0
+3/50 q_0a12138b81eb7e2a
+4/50 q_acb9552be66a185e
+5/50 q_718de34f908aedf1
+6/50 q_60172faac220e3ba
+7/50 q_ea9717a5c736c528
+8/50 q_15481dc07d08e3b7
+9/50 q_039f48f42921b2be
+10/50 q_cf94bf63c3f36630
+11/50 q_8387fe9ada6a55b7
+12/50 q_d40345916def841c
+13/50 q_d314ed9f3f36b9f2
+14/50 q_6732a76e35123b29
+15/50 q_cf481783581f77d9
+16/50 q_e728deb6245b53ba
+17/50 q_03d88d0c11bdacb8
+18/50 q_297fc9f62e2f517a
+19/50 q_f50a3bcbea7a89e6
+20/50 q_5f8dd3b4ec87cfef
+21/50 q_97b7fb6bab5241df
+22/50 q_bc4ef8e0d0976c17
+23/50 q_cce3b075ec20d9c6
+24/50 q_3d72885589c2f21d
+25/50 q_a043ce7777c23289
+26/50 q_3d50f31d4e5c576c
+27/50 q_e902ad12c1e3e04f
+28/50 q_24db50b697cd65b9
+29/50 q_90caf2950d97119c
+30/50 q_eb4aa1f4a40817d3
+31/50 q_dd94af61414916d5
+32/50 q_90bbdbd2ad85463a
+33/50 q_1eba59077cc2f095
+34/50 q_2e2cafa7d98b7fd1
+35/50 q_010a85d579ea45cc
+36/50 q_8e0fce53518e232d
+37/50 q_2a6ed3a4289e5103
+38/50 q_f7804f0551b36345
+39/50 q_0b01164a6a65d8e4
+40/50 q_622e19d609fee5ed
+41/50 q_37811f39f0fef26f
+42/50 q_0b007d68bef85089
+43/50 q_9197507679f76095
+44/50 q_59d1d9b59e446af3
+45/50 q_c503ecc96204f22b
+46/50 q_9b58ccedb7663d90
+47/50 q_35b1e73c2c88325f
+48/50 q_cde8053b3855199a
+49/50 q_38ba80ea1b938c92
+50/50 q_e52f91c8bb7e3b48
+Saved: rag/results/bge100-full-3718533-1.jsonl

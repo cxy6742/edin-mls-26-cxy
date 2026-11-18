@@ -1,0 +1,54 @@
+Task 4: loading BGE for 50 queries
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/393 [00:00<?, ?it/s]Loading weights: 100%|██████████| 393/393 [00:00<00:00, 4309.84it/s]
+1/50 q_097d0bdeed34e8e9
+2/50 q_d5a785d3f5d65e5e
+3/50 q_2987aa361da29f11
+4/50 q_2f8b71540044aa3f
+5/50 q_e86dfaec0aa23a50
+6/50 q_f22e839d8a692799
+7/50 q_919b2fdd69153c06
+8/50 q_7cafeb3b3a6a690a
+9/50 q_823116693ab14a7c
+10/50 q_365103453d0e9a96
+11/50 q_a7038ef1935d97b1
+12/50 q_23396524ffa342fe
+13/50 q_b0e24c9ff7cbeee4
+14/50 q_3bd06eaf675d1a65
+15/50 q_bf24a25726094fc5
+16/50 q_528e698db2500a86
+17/50 q_3d6f80f4325f9ba6
+18/50 q_dd2226adc58b4d3b
+19/50 q_f619da3dcf9a6dcc
+20/50 q_36535c9bc945a65c
+21/50 q_91616b8d02af5502
+22/50 q_5f4e13b90c898275
+23/50 q_50bfbbdb9b77c4a4
+24/50 q_16b8e7d1c4b10958
+25/50 q_c0fa5cc49db7b268
+26/50 q_d65be22f6caa6e64
+27/50 q_920e1dd64c57a825
+28/50 q_a24ee4bcca4c9843
+29/50 q_f0038e460ab51e4a
+30/50 q_b7e2ae9fe8570d1e
+31/50 q_7e76951cd9ad079f
+32/50 q_01e4a6bd93b1c759
+33/50 q_4d9e1193116d2658
+34/50 q_670e17ac4bbc3f81
+35/50 q_60a0ba6b0ed8b713
+36/50 q_0533f8f647f9c24d
+37/50 q_7fb7c14235f8ec06
+38/50 q_6979feacba7fcfd1
+39/50 q_e77b8b1626dbdebf
+40/50 q_561c2b9a20f6f82b
+41/50 q_6a8ec9fb4e2ddd91
+42/50 q_921fec2b0951a359
+43/50 q_f1031c4e7a72aed8
+44/50 q_c97fdd86b64ec366
+45/50 q_c66b7f98a774dae5
+46/50 q_3e6c648684d79f73
+47/50 q_7672a131ca92592d
+48/50 q_8706e2925ba6d565
+49/50 q_1bffc3d815eb1df8
+50/50 q_eddc8ad5ab953288
+Saved: rag/results/bge100-full-3718533-4.jsonl

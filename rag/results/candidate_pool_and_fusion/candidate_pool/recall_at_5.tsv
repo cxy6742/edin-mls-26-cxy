@@ -1,0 +1,7 @@
+Model	Candidates	Queries	Recall@5
+BGE	20	350	47.18%
+BGE	50	350	46.72%
+BGE	100	350	45.58%
+Mixedbread	20	350	47.32%
+Mixedbread	50	350	45.88%
+Mixedbread	100	350	46.34%
