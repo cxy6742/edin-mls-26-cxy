@@ -1,0 +1,274 @@
+{
+  "split": "practice",
+  "queries": 350,
+  "baseline": "/workspace/rag/results/baseline_all_cpu_350_v1.jsonl",
+  "method": "bm25",
+  "model": null,
+  "encoder": "enc_a",
+  "device": "cpu",
+  "candidate_set": "fixed top-k from exact dense retrieval",
+  "index_build_ms": 929.4932509999398,
+  "model_load_ms": null,
+  "retrieval_depth_retrieved_once": 20,
+  "mean_retrieval_ms_at_that_depth": 4.108123397141818,
+  "by_k": {
+    "2": {
+      "queries": 350,
+      "order_changed": 0.37142857142857144,
+      "queries_with_relevant_candidate": 172,
+      "mean_rerank_ms": 0.06500820285802027,
+      "mean_first_relevant_rank_before": 1.1627906976744187,
+      "mean_first_relevant_rank_after": 1.2616279069767442,
+      "first_relevant_improved": 12,
+      "first_relevant_worsened": 29,
+      "metrics": {
+        "Recall@1": {
+          "first_stage": 0.22916903731189442,
+          "reranked": 0.20131189445475156,
+          "delta": -0.027857142857142858
+        },
+        "MRR@1": {
+          "first_stage": 0.4114285714285714,
+          "reranked": 0.3628571428571429,
+          "delta": -0.04857142857142854
+        },
+        "NDCG@1": {
+          "first_stage": 0.4114285714285714,
+          "reranked": 0.3628571428571429,
+          "delta": -0.04857142857142854
+        },
+        "Recall@2": {
+          "first_stage": 0.3187598433312719,
+          "reranked": 0.3187598433312719,
+          "delta": 0.0
+        },
+        "MRR@2": {
+          "first_stage": 0.4514285714285714,
+          "reranked": 0.42714285714285716,
+          "delta": -0.024285714285714244
+        },
+        "NDCG@2": {
+          "first_stage": 0.38553281809077766,
+          "reranked": 0.371685859289895,
+          "delta": -0.013846958800882658
+        }
+      }
+    },
+    "5": {
+      "queries": 350,
+      "order_changed": 0.98,
+      "queries_with_relevant_candidate": 207,
+      "mean_rerank_ms": 0.061233962859595134,
+      "mean_first_relevant_rank_before": 1.565217391304348,
+      "mean_first_relevant_rank_after": 1.8743961352657006,
+      "first_relevant_improved": 29,
+      "first_relevant_worsened": 64,
+      "metrics": {
+        "Recall@1": {
+          "first_stage": 0.22916903731189442,
+          "reranked": 0.20428468357039783,
+          "delta": -0.024884353741496584
+        },
+        "MRR@1": {
+          "first_stage": 0.4114285714285714,
+          "reranked": 0.35428571428571426,
+          "delta": -0.05714285714285716
+        },
+        "NDCG@1": {
+          "first_stage": 0.4114285714285714,
+          "reranked": 0.35428571428571426,
+          "delta": -0.05714285714285716
+        },
+        "Recall@2": {
+          "first_stage": 0.3187598433312719,
+          "reranked": 0.26735168006596577,
+          "delta": -0.05140816326530612
+        },
+        "MRR@2": {
+          "first_stage": 0.4514285714285714,
+          "reranked": 0.3914285714285714,
+          "delta": -0.06
+        },
+        "NDCG@2": {
+          "first_stage": 0.38553281809077766,
+          "reranked": 0.32752166592986953,
+          "delta": -0.05801115216090813
+        },
+        "Recall@5": {
+          "first_stage": 0.4213372500515358,
+          "reranked": 0.4213372500515358,
+          "delta": 0.0
+        },
+        "MRR@5": {
+          "first_stage": 0.4805238095238095,
+          "reranked": 0.43709523809523804,
+          "delta": -0.04342857142857148
+        },
+        "NDCG@5": {
+          "first_stage": 0.3997456302431122,
+          "reranked": 0.3766476392895928,
+          "delta": -0.023097990953519443
+        }
+      }
+    },
+    "10": {
+      "queries": 350,
+      "order_changed": 1.0,
+      "queries_with_relevant_candidate": 228,
+      "mean_rerank_ms": 0.10401888285806697,
+      "mean_first_relevant_rank_before": 2.1096491228070176,
+      "mean_first_relevant_rank_after": 2.8859649122807016,
+      "first_relevant_improved": 37,
+      "first_relevant_worsened": 83,
+      "metrics": {
+        "Recall@1": {
+          "first_stage": 0.22916903731189442,
+          "reranked": 0.1945227788084931,
+          "delta": -0.034646258503401306
+        },
+        "MRR@1": {
+          "first_stage": 0.4114285714285714,
+          "reranked": 0.34,
+          "delta": -0.0714285714285714
+        },
+        "NDCG@1": {
+          "first_stage": 0.4114285714285714,
+          "reranked": 0.34,
+          "delta": -0.0714285714285714
+        },
+        "Recall@2": {
+          "first_stage": 0.3187598433312719,
+          "reranked": 0.2429707276850134,
+          "delta": -0.07578911564625848
+        },
+        "MRR@2": {
+          "first_stage": 0.4514285714285714,
+          "reranked": 0.36714285714285716,
+          "delta": -0.08428571428571424
+        },
+        "NDCG@2": {
+          "first_stage": 0.38553281809077766,
+          "reranked": 0.3003803578558213,
+          "delta": -0.08515246023495637
+        },
+        "Recall@5": {
+          "first_stage": 0.4213372500515358,
+          "reranked": 0.36719088847660275,
+          "delta": -0.05414636157493308
+        },
+        "MRR@5": {
+          "first_stage": 0.4805238095238095,
+          "reranked": 0.4056190476190476,
+          "delta": -0.07490476190476192
+        },
+        "NDCG@5": {
+          "first_stage": 0.3997456302431122,
+          "reranked": 0.3376176264064263,
+          "delta": -0.06212800383668593
+        },
+        "Recall@10": {
+          "first_stage": 0.47959389816532677,
+          "reranked": 0.47959389816532677,
+          "delta": 0.0
+        },
+        "MRR@10": {
+          "first_stage": 0.4887460317460317,
+          "reranked": 0.42133333333333334,
+          "delta": -0.06741269841269837
+        },
+        "NDCG@10": {
+          "first_stage": 0.4204605115536775,
+          "reranked": 0.3790930845372654,
+          "delta": -0.04136742701641205
+        }
+      }
+    },
+    "20": {
+      "queries": 350,
+      "order_changed": 1.0,
+      "queries_with_relevant_candidate": 258,
+      "mean_rerank_ms": 0.18634157999745835,
+      "mean_first_relevant_rank_before": 3.5968992248062017,
+      "mean_first_relevant_rank_after": 4.782945736434108,
+      "first_relevant_improved": 51,
+      "first_relevant_worsened": 115,
+      "metrics": {
+        "Recall@1": {
+          "first_stage": 0.22916903731189442,
+          "reranked": 0.17190373118944546,
+          "delta": -0.057265306122448956
+        },
+        "MRR@1": {
+          "first_stage": 0.4114285714285714,
+          "reranked": 0.3,
+          "delta": -0.11142857142857143
+        },
+        "NDCG@1": {
+          "first_stage": 0.4114285714285714,
+          "reranked": 0.3,
+          "delta": -0.11142857142857143
+        },
+        "Recall@2": {
+          "first_stage": 0.3187598433312719,
+          "reranked": 0.2275693671407957,
+          "delta": -0.09119047619047618
+        },
+        "MRR@2": {
+          "first_stage": 0.4514285714285714,
+          "reranked": 0.33285714285714285,
+          "delta": -0.11857142857142855
+        },
+        "NDCG@2": {
+          "first_stage": 0.38553281809077766,
+          "reranked": 0.27311745228570283,
+          "delta": -0.11241536580507483
+        },
+        "Recall@5": {
+          "first_stage": 0.4213372500515358,
+          "reranked": 0.3572997320140177,
+          "delta": -0.06403751803751812
+        },
+        "MRR@5": {
+          "first_stage": 0.4805238095238095,
+          "reranked": 0.3764761904761904,
+          "delta": -0.10404761904761911
+        },
+        "NDCG@5": {
+          "first_stage": 0.3997456302431122,
+          "reranked": 0.3155162539782951,
+          "delta": -0.08422937626481714
+        },
+        "Recall@10": {
+          "first_stage": 0.47959389816532677,
+          "reranked": 0.45766171923314786,
+          "delta": -0.021932178932178914
+        },
+        "MRR@10": {
+          "first_stage": 0.4887460317460317,
+          "reranked": 0.3903321995464853,
+          "delta": -0.09841383219954641
+        },
+        "NDCG@10": {
+          "first_stage": 0.4204605115536775,
+          "reranked": 0.35280613423431556,
+          "delta": -0.06765437731936191
+        },
+        "Recall@20": {
+          "first_stage": 0.5785236033807462,
+          "reranked": 0.5785236033807462,
+          "delta": 0.0
+        },
+        "MRR@20": {
+          "first_stage": 0.49473950697933444,
+          "reranked": 0.39690726382566277,
+          "delta": -0.09783224315367167
+        },
+        "NDCG@20": {
+          "first_stage": 0.4509957349285728,
+          "reranked": 0.39019235443910855,
+          "delta": -0.060803380489464265
+        }
+      }
+    }
+  }
+}
