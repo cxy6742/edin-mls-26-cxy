@@ -1,0 +1,666 @@
+\documentclass{article}
+
+% ============================================================
+% INFR11269 Machine Learning Systems — Coursework Report
+% Academic year 2026/27
+%
+% This coursework uses the official ICLR 2027 LaTeX style.
+%
+% IMPORTANT FORMAT RULES
+% - Do not edit iclr2027_conference.sty.
+% - Do not change page geometry, text width/height, base font size,
+%   or line spacing.
+% - Do not enable \iclrfinalcopy.
+% - Normal content packages are fine if they do not alter the report format.
+%
+% Main-body page limit: six pages.
+% References and Appendix do NOT count toward the main-body page limit.
+% Reviewers are not obliged to read Appendix at all. Please put your main content
+% in the main body.
+% 
+% AI policy:
+% Academic integrity is an underlying principle of research and academic practice.
+% All submitted work is expected to be your own, including any material you have
+% generated yourself with the assistance of AI tools such as ELM, ChatGPT,
+% Bing Chat, Claude, Google Gemini, or any other automated assistance.
+% For all such material you must make prominent explicit acknowledgement and
+% explain clearly what you have done in the AI declaration section.
+% This includes using AI to directly generate text, code, figures or similar
+% or to complete other tasks. In all cases, you remain entirely responsible
+% for the material you produce.
+% ============================================================
+
+\usepackage{iclr2027_conference,times}
+
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{placeins}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[utf8]{inputenc}
+\DeclareUnicodeCharacter{223C}{\textasciitilde}
+
+% The official ICLR archive includes math_commands.tex. It is optional:
+\input{math_commands.tex}
+
+\title{Retrieval Depth and Reranking in ASR-Based Question Answering: Quality and Cost}
+
+% Keep this line unchanged.
+\author{Anonymous coursework submission}
+
+% Keep this COMMENTED OUT.
+% Review mode is part of the coursework format and is checked automatically.
+% \iclrfinalcopy
+%\setcitestyle{numbers,square}
+\begin{document}
+
+\maketitle
+
+% Course-specific template fingerprint. Keep this line unchanged.
+\lhead{Under review as a report for UoE 26/27 Sem1 INFR11269: Machine Learning Systems}
+
+% Keep this COMMENTED OUT.
+% \begin{abstract}
+% \end{abstract}
+
+% ============================================================
+% REPORT CONTENT GUIDANCE
+
+% The structure below is RECOMMENDED, not mandatory.
+% You may rename, merge, split, or reorder sections if another structure
+% better communicates your investigation.
+
+% Regardless of section titles, the report should make it easy to find:
+%   1. the problem, motivation, and relevant system context;
+%   2. the supplied baseline and your substantive technical work;
+%   3. experimental methodology, metrics, and controlled comparisons;
+%   4. results covering task/system quality AND relevant system cost;
+%   5. analysis of why the results occur, limitations, and conclusions.
+% Well organized report would result in better scores.
+
+% Depth is preferred over implementing many unrelated features.
+% ============================================================
+
+\section{Introduction}
+\label{sec:introduction}
+This project built a voice-based question-answering system based on the workflow provided in the course. The Automatic Speech Recognition (ASR) module first converts spoken questions into text. The Dense Retriever ranks documents based on the transcribed text, and the language model then uses the selected documents to generate answers.
+
+The experiment first used Dense Top-5 as the baseline, feeding the top five documents from the search results to the generative model. After running the baseline, the analysis revealed that increasing the retrieval depth improves evidence coverage. This observation raised a question: Does higher evidence coverage lead to higher answer scores? Consequently, the experiment varied the number of documentes passed to the generator (k=2, 5, 10, 20) and found that the average score of automatically evaluated answers did not consistently increase. Analysis revealed that one key reason for this was that while coverage increased, the generative model may also have received more irrelevant content. According to \citet{liu2024lost}, in multi-document question-answering, the position of relevant evidence within the input document sequence may influence the performance of the generative model’s responses.
+
+To examine the impact of document order on answer quality, this project fixed the top five documents returned by dense retrieval and adjusted only the order in which they were fed into the generative model. Since adjusting the order does not allow evidence beyond the top five to be incorporated into the generative model’s input, subsequent experiments further utilized different reranking algorithms and rank fusion methods to reselect five documents from a larger pool of candidates. Previous research has shown that reranking can further improve the ranking of candidate documents \citep{nogueira2019passage}. The final experimental results show that some reranking schemes improved the coverage of annotated evidence, but the observed increase in the average answer score was small, and the benefits remain uncertain. Reordering determines which evidence enters the generative model’s input, but the final answer also depends on the model’s ability to recognize and utilize that evidence. Furthermore, since reordering also increases processing time, system design requires balancing evidence coverage, answer quality, and processing overhead.
+
+\section{System and Technical Approach}
+\label{sec:approach}
+
+The spoken question-answering pipeline covered in this course includes automatic speech recognition (ASR), dense retrieval, and answer generation. The ASR module transcribes spoken queries into text. The dense retriever ranks documents in the corpus based on the ASR transcript. In the Dense Top-5 baseline, the answer generator receives the ASR transcript text and uses the top five documents ranked by the dense retriever as context. This study investigates whether reranking and rank fusion can improve evidence selection and answer quality, as well as the additional reranking time these modifications entail.
+
+First, we retain the original ranking from dense retrieval, using the top k documents as context for the answer generator. By varying the value of k, the experiments examine how document lists of different lengths affect answer quality.
+
+The modified pipeline introduces a reranking stage between dense retrieval and answer generation. The reranker rescores candidate documents based on the query. Answer generation experiments with a fixed candidate set use the same set of Dense Top-5 documents to examine how changing the document order affects answer quality. Experiments expanding the candidate pool allowed documents originally ranked outside the top five to participate in the reranking, after which the top five reranked documents were passed to the generator. The system further incorporated rank fusion to test whether the rankings from BGE and Mixedbread could complement each other.
+
+\section{Experimental Methodology}
+\label{sec:methodology}
+\subsection{Baseline Pipeline and Document Count}
+%简要说明语音问题如何经过 ASR 转录、Dense 检索和答案生成。先介绍 Dense Top-5 基线，再说明第一组实验将直接交给生成模型的文档数设为 \(k=2,5,10,20\)。
+\label{sec:baseline-pipeline}
+
+ASR runs on its own in a separate process and environment. It takes in a 16 kHz mono PCM16 recording changes the sampled values to float32 and sends it to GLM-ASR-Nano to convert to text. The model will use all four custom CUDA cores for the ASR task to generate up to 100 tokens; if you get an EOS stop early. At the end of the run the worker provides a transcription.
+
+This text is converted into a vector. Checked against the vectors from the corpus that have been calculated. Dense search finds the Top-k related documents, which are then given to the language models cue words by the context builder. The generator is project/ eurollm-22b-instructor-2512 and the temperature is set to 0.1. The section titled ∼ \ref{sec:metrics} uses the model to evaluate the metrics. The baseline uses k=5 by default. In the experiment we kept the saved transcriptions the same except, for the number of documents and tested k=2, 5 10 20.
+
+\subsection{Reranking and Evidence Selection}
+
+\subsubsection{Reranking in a Fixed Candidate Set}
+\label{sec:fixed-set-fusion}
+
+The retrieval-depth experiment changed how many documents the generator received, so a change in answer score could come from a different document set or from a different order. This experiment fixes the set and changes only the order. It measures how much of the ranking quality, and of the answer score, comes from order alone, and what reranking time that costs. The position of relevant evidence in a multi-document prompt can affect the generated answer~\citep{liu2024lost}; whether that happens here is tested, not assumed.
+
+The inputs are the saved ASR transcripts for all 350 practice queries, so ASR is not run again. The first stage remains exact dense retrieval with the course \texttt{enc\_a} encoder. Ranking is evaluated on the fixed dense sets at \(k\in\{2,5,10,20\}\). On each set, three methods rescore the same \(k\) documents. They differ in the signal they use and in the added cost.
+
+\par\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\centering
+\small
+\makeatletter
+\def\@captype{table}
+\makeatother
+\caption{Rerankers compared on one fixed candidate set.}
+\label{tab:rerankers}
+\begin{tabular}{p{0.20\linewidth} p{0.46\linewidth} p{0.26\linewidth}}
+\toprule
+Method & Score & Role and cost \\
+\midrule
+BM25 &
+Okapi BM25, \(k_1=1.2\), \(b=0.75\). Inverse document frequency is estimated on the full corpus; only the \(k\) selected documents are scored~\citep{robertson2009bm25}. &
+Lexical overlap. No extra model call. \\
+Cross-encoder &
+\texttt{cross-encoder/ms-marco-MiniLM-L-6-v2} scores each query--document pair in the set~\citep{nogueira2019passage}. &
+Joint query--document score. Cost grows with the number of pairs. \\
+Dense--BM25 fusion &
+Both scores are min--max normalised inside the \(k\) candidates and combined by Equation~\ref{eq:fusion}. &
+Keeps the dense score and the lexical score. The added work is the BM25 score. \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\par\medskip
+
+BM25 uses only term overlap, so a relevant document with different wording can rank lower. The cross-encoder scores the query and the document together, but it scores every selected pair. Fusion keeps both signals. The dense score is a cosine similarity, while BM25 uses a different numeric range, so adding the raw scores would let the wider range dominate. Each score is therefore scaled to \([0,1]\) inside that query's \(k\) candidates and combined as
+\begin{equation}
+s = \alpha\, s_{\mathrm{dense}} + (1-\alpha)\, s_{\mathrm{BM25}},
+\label{eq:fusion}
+\end{equation}
+where \(\alpha\) is the weight on the dense score. The compared weights are \(\alpha\in\{0.25,0.50,0.75\}\). Scaling is done inside the candidate set because the score ranges differ across queries. Equal fused scores keep the earlier dense rank.
+
+Because the \(k\) documents do not change, Recall@\(k\) cannot change. It checks whether a relevant document is in the set, not where it is placed. MRR depends on the rank of the first relevant document, and nDCG depends on rank and relevance grade~\citep{jarvelin2002cumulated}. A change in either metric comes from the new order.
+
+Answer generation uses only dense--BM25 fusion with \(k=5\) and \(\alpha=0.75\). The generator receives the same five documents returned by dense retrieval, in the fused order. Each answer is judged five times with the rubric in Section~\ref{sec:metrics}. The comparison is paired by query: the same question and the same five documents, with only the order changed. This comparison uses a paired \(t\) interval for the mean R5 difference. The added cost is the per-query fusion time on top of Dense Top-5.
+
+
+\subsubsection{Reranking with a Larger Candidate Pool}
+In the previous set of experiments, the original Dense Top-5 document set was fixed, and only the input order was altered. To give evidence that originally ranked outside the top five a chance to enter the generative model, this set of experiments expanded the pool of candidates for reranking and fixed the number of documents ultimately selected at five.
+
+To minimize confounding factors, the 350 questions from the course RAG practice set and the same document relevance judgements (qrels) were consistently used. The Dense Top-5 baseline directly uses the top five documents ranked by dense retrieval. Each reordering comparison group reuses the corresponding dense retrieval results; therefore, the same ASR transcripts, dense retrieval encoder, and document corpus are used within each group. For the same question, all reordering methods within a group use the same candidate documents.
+
+The first comparison evaluates the evidence selection performance of different rerankers (\texttt{BAAI/bge-reranker-v2-m3, cross-encoder/ms-marco-MiniLM-L6-v2, and mixedbread-ai/mxbai-rerank-large-v1}) by reranking the top 20 candidate documents returned by dense retrieval. The experiment compared the top five documents selected by each model with the Dense Top-5 baseline and evaluated evidence coverage and answer quality.
+
+In the next set of experiments, the top 20, 50, and 100 candidate documents from the dense retrieval results were reordered using both BGE and Mixedbread at each candidate pool size, with five documents retained for each query in every configuration. And then compares BGE, Mixedbread and their rank fusion on the same Dense Top-100 candidate pool to test whether the two rerankers complement each other. The fusion method follows a Borda-style rank aggregation approach
+\citep{aslam2001models}. For each candidate document $d$, we compute
+the sum of its ranks from the two rerankers:
+\begin{equation}
+    s_{\mathrm{fusion}}(d)
+    = r_{\mathrm{BGE}}(d) + r_{\mathrm{Mixedbread}}(d).
+\end{equation}
+Rank 1 denotes the best position. The fusion method sorts the documents in ascending order based on the sum of their ranks and retains the top five documents. The experiment compared two tie-breaking rules: one prioritised the BGE ranking, and the other prioritised the Mixedbread ranking.
+
+\subsection{Quality and System Cost Metrics}
+\label{sec:metrics}
+The experiment used Recall@5 to measure the extent to which the five documents selected for generation covered the annotated evidence. For each query, the experiment calculated the annotated relevant documents in the top five relative to all annotated relevant documents for that query, and then took the mean across all queries.
+
+In the comparison of the quality of primary answers, the experiment used EuroLLM-22B-Instruct as the judge model. The model independently scored each answer five times across three dimensions—correctness, grounding, and completeness—according to the course rubric. Each of the three dimensions was scored on a scale of 0–4 points per evaluation. The experiment divided the total score by 12 and then took the average of the five normalised scores to obtain the answer score for each query. The experiment performed paired bootstrap resampling at the query level to estimate the mean difference in answer scores between each method and the Dense Top-5 baseline, along with its 95\% confidence interval.
+
+The experiment uses Dense Top-5 without reranking as the baseline to measure the actual time increase caused by reranking when processing 350 queries. All reranking runs were performed on an NVIDIA H200 MIG (1g.18gb) instance with a batch size of 16. Timing began after the model finished loading and covered reading candidate documents, calculating relevance scores and ranking the documents, computing Recall@5 for each query, and saving the IDs of the top five documents along with their per-query Recall@5 values.
+
+\section{Results and Analysis}
+\label{sec:results}
+
+\subsection{ASR Correctness and Performance}
+\label{sec:asr-results}
+
+Table~\ref{tab:asr-kernel-tests} summarises the correctness tests for the four CUDA tasks. All 33 cases passed. The latency column is the time of the listed case, not that operation's share of one transcription.
+
+\par\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\centering
+\small
+\makeatletter
+\def\@captype{table}
+\makeatother
+\caption{CUDA kernel test results. Maximum error is reported across all cases for each task, and latency is reported for the listed case.}
+\label{tab:asr-kernel-tests}
+\begin{tabular}{@{}lcc l r@{}}
+\toprule
+Task & Tests passed & Max.\ error & Representative case & Latency (ms) \\
+\midrule
+RoPE       & 4/4   & $1.91 \times 10^{-7}$ & Encoder RoPE       & 0.053 \\
+Reduction  & 11/11 & $5.42 \times 10^{-7}$ & Encoder LayerNorm  & 0.061 \\
+Tiled GEMM & 10/10 & $3.72 \times 10^{-5}$ & Encoder FC1 + GELU & 21.116 \\
+Attention  & 8/8   & $5.21 \times 10^{-7}$ & Encoder attention  & 33.180 \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\par\medskip
+
+Table~\ref{tab:asr-transcription} compares the PyTorch baseline with all four custom CUDA kernels enabled. Both passed the transcription check on the 3.50\,s clip. The all-CUDA run took 4.56 times as long and used 0.34 GiB less peak GPU memory. In its kernel profile, linear accounts for 81.4\% of kernel time and attention for 18.2\%. RoPE, normalisation and softmax together are under 1\%. The slower transcription follows the tiled GEMM, which implements the linear operation. The \texttt{make test} logs and both \texttt{./run.sh --profile} runs report the same device, an NVIDIA H200 MIG 1g.18gb. \texttt{nvidia-smi -L} names it \texttt{NVIDIA H200}, with one \texttt{MIG 1g.18gb} slice.
+
+\par\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\centering
+\small
+\makeatletter
+\def\@captype{table}
+\makeatother
+\caption{ASR transcription on a 3.50\,s audio clip using the same
+NVIDIA H200 MIG 1g.18gb partition. Each configuration was measured
+over three runs with 13 tokens per run. Transcription latency
+excludes model loading.}
+\label{tab:asr-transcription}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Metric & PyTorch baseline & All CUDA kernels enabled \\
+\midrule
+Mean latency per transcription (ms) & 1337.7 & 6094.5 \\
+Latency per token (ms)               & 102.9  & 468.8  \\
+Peak GPU memory (GiB)                & 8.90   & 8.56   \\
+Transcription accuracy on this clip  & 100.0\% & 100.0\% \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\par\medskip
+
+
+\subsection{ASR Task Questions}
+\label{sec:asr-task-questions}
+\paragraph{Task 1 Question 1: RoPE memory traffic and bandwidth.}
+The audio encoder test uses a batch size of 1, 1500 positions, 20 query heads, and 20 key heads. Each head contains 64 elements, but RoPE rotates only the first 32. Each float32 element occupies 4 bytes. Following the test program's accounting, each rotated element is read once and written once. The total traffic is therefore
+\[
+B_{\mathrm{RoPE}}
+=2 \times 1500 \times (20+20) \times 32 \times 4
+=15{,}360{,}000~\mathrm{bytes}
+\]
+This comprises 7.68 MB of reads and 7.68 MB of writes. With 256 threads per block, the effective bandwidth recorded is 289.4 GB/s. Relative to the approximately 563 GB/s peak reported for the NVIDIA H200 MIG 1g.18gb partition, this gives
+\[
+\frac{289.4}{563}\times100\% \approx 51.4\%
+\]
+This calculation counts only the rotated query and key elements. It excludes reads from the frequency table and does not measure physical DRAM traffic with hardware counters. The recorded RoPE test output is shown in Appendix~\ref{app:task1-rope-output}.
+
+\paragraph{Task 2 Question 3: Softmax input reads.}
+Our softmax kernel reads each input element $x$ twice. In the first
+pass, the kernel reads \texttt{xr[c]} and uses \texttt{MaxSum} to track
+the maximum and the scaled sum of exponentials together. The block
+then combines these partial results. In the second pass, the kernel
+rereads \texttt{xr[c]} to compute and write the normalised output.
+
+The textbook implementation described in the question reads each
+input element three times. The first pass finds the maximum, the
+second computes the sum of exponentials, and the third computes and
+writes the normalised output.
+
+\paragraph{Task 3 Question 1: Global-memory loads for the square GEMM.}
+For $M=N=K=1024$, the naive kernel reads one element of $x$ and one element of $W$ at each of the $K$ positions. Its $16\times 16$ launch covers the matrices exactly, so
+\[
+L_{\mathrm{naive}}
+=2\times 1024^{3}
+=2{,}147{,}483{,}648~\mathrm{floats}.
+\]
+The tiled kernel uses \texttt{TILE}${}=16$: $(1024/16)^{2}=4096$ blocks take $64$ steps along $K$, and each step loads $16\times 16$ floats of $x$ and of $W$:
+\[
+L_{\mathrm{tiled}}
+=4096\times 64\times 2\times 256
+=134{,}217{,}728~\mathrm{floats}.
+\]
+That is $1/16$ of the naive count. Appendix~\ref{app:task3-loads} records the tile-size measurements. The GFLOP/s printed by the test is $2MNK$ divided by time, so it does not count these loads.
+
+\paragraph{Task 4 Question 4: Key loads and the useful block width.}
+The encoder case has 1500 queries and is not causal, so every query reads every key of its head. One block copies each key once for its \texttt{ATTN\_WARPS} queries:
+\[
+N_{\mathrm{key}}
+=\left\lceil\frac{1500}{\texttt{ATTN\_WARPS}}\right\rceil.
+\]
+With \texttt{ATTN\_WARPS}${}=4$ this is 375. The launch uses \texttt{ATTN\_WARPS}$\times 32$ threads, so 32 warps fills the 1024-thread block. Shared memory for \texttt{head\_dim}${}=64$ is
+\[
+32\times(64+1)+32\times 64+\texttt{ATTN\_WARPS}\times 64
+\]
+floats, or 24{,}704 bytes at 32 warps, below the 48~KB check. More warps only reduce repeated key loads in this formula. From 8 to 16 warps, the loads per key fall from \(\lceil 1500/8\rceil=188\) to \(\lceil 1500/16\rceil=94\). The measured encoder time falls from 24.4\,ms to 21.5\,ms, much less than the drop from 1 to 8 warps, and this is before the 32-warp limit.
+
+\subsection{Effect of Retrieval Depth}
+
+\begingroup
+\makeatletter
+\def\@captype{table}
+\makeatother
+
+\noindent
+\begin{minipage}{\linewidth}
+\centering
+\caption{Dense baseline retrieval recall on 350 practice queries.}
+\label{tab:dense-baseline-recall}
+\begin{tabular}{lcccc}
+\hline
+Method & Recall@5 & Recall@10 & Recall@20 & Recall@100 \\
+\hline
+Dense baseline & 0.421337 & 0.479594 & 0.578524 & 0.769856 \\
+\hline
+\end{tabular}
+\end{minipage}
+
+\par\medskip
+
+\noindent
+\begin{minipage}{\linewidth}
+\centering
+\caption{Mean normalised answer scores by retrieval depth.
+R1 uses one judge evaluation per answer. R5 averages five.}
+\label{tab:retrieval-depth-answer-scores}
+\begin{tabular}{lccc}
+\hline
+Retrieval depth $k$ & Repeat 1 & Repeat 5 & R5 difference vs.\ $k=5$ \\
+\hline
+2            & 0.326429 & 0.319667          & $-0.026619$ \\
+5 (baseline) & 0.336190 & \textbf{0.346286} & $\phantom{-}0.000000$ \\
+10           & 0.321905 & 0.327476          & $-0.018810$ \\
+20           & 0.311905 & 0.314524          & $-0.031762$ \\
+\hline
+\end{tabular}
+\end{minipage}
+
+\par
+\endgroup
+
+Recall rises with depth, from 0.421 at \(k=5\) to 0.770 at \(k=100\), but the answer score does not. Five judge repeats give 0.346 at \(k=5\), above \(k=2\), \(k=10\), and \(k=20\), so later generation keeps five documents. One repeat changes the score and the gaps, so the comparisons below use the five-repeat mean.
+
+
+\subsection{Reranking and Evidence Selectiong}
+
+\subsubsection{Fusion within the Fixed Dense Set}
+\label{sec:fixed-set-results}
+
+Ranking was run for every \(k\in\{2,5,10,20\}\) before any fused answers were generated. Pure BM25 and the cross-encoder lower MRR@5 by 0.043 and 0.017, so they were not used to generate answers. In the fusion, a lower \(\alpha\) also lowers MRR and nDCG. At \(\alpha=0.75\), the change in MRR@5 / nDCG@5 is \(-0.003/-0.002\). The changes at \(k=10\) and \(k=20\) are about \(+0.002\) MRR. Table~\ref{tab:retrieval-depth-answer-scores} already gives the dense top ten a Repeat-5 score of 0.327, below 0.346 for \(k=5\), so those settings were not generated.
+
+Answers were generated only for \(\alpha=0.75\), \(k=5\). The five documents are the dense top five, so Recall@5 stays 42.13\%, the same as Dense Top-5. Table~\ref{tab:fixed-fusion-answer} gives the answer score, its paired \(t\) interval, and the added reranking time.
+
+\par\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\centering
+\small
+\makeatletter
+\def\@captype{table}
+\makeatother
+\caption{Fixed-set dense--BM25 fusion on 350 practice queries.
+Recall@5 and mean R5 use five judge repeats.
+The interval is a paired \(t\) interval for the mean R5 difference, not the paired bootstrap in Section~\ref{sec:metrics}.
+Added time is the mean per-query reranking time. Encoding through answer generation averages 4.83\,s, of which generation is 4.55\,s.}
+\label{tab:fixed-fusion-answer}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Configuration & Recall@5 & Mean R5 & 95\% CI for \(\Delta\)R5 & Added time \\
+\midrule
+Dense Top-5 & 42.13\% & 0.346 & --- & 0 \\
+Dense--BM25, \(\alpha=0.75\), \(k=5\) & 42.13\% & 0.351 & \(+0.005\) \([-0.017,+0.027]\) & 0.25\,ms/query \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\par\medskip
+
+\subsubsection{Reranker Comparison, Candidate Pool Size, and Rank Fusion}
+
+This subsection presents the results of comparing different rerankers on the same candidate pool and examines whether expanding the candidate pool can improve Recall@5 after reranking.
+
+\par\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\centering
+\makeatletter
+\def\@captype{table}
+\makeatother
+\caption{Comparison of rerankers on Dense Top-20 candidates.}
+\label{tab:reranker-top20}
+\begin{tabular}{lrrr}
+\hline
+Method & Recall@5 & R5 & $\Delta$R5 vs.\ baseline \\
+\hline
+Dense Top-5 (baseline) & 42.13\% & 0.346286 & 0.000000 \\
+BGE $20\to5$ & 47.18\% & 0.348857 & $+0.002571$ \\
+MiniLM $20\to5$ & 41.11\% & 0.337810 & $-0.008476$ \\
+Mixedbread $20\to5$ (whole document) & \textbf{47.32\%} & 0.371190 & +0.024904 \\
+\hline
+\end{tabular}
+\end{minipage}
+\par\medskip
+
+Table 6 shows that both Mixedbread and BGE improve Recall@5 and achieve higher mean R5 scores. The Top-20 candidate pool has a Recall@20 of 57.85\%, and the reranker can select documents only from this pool. Table 3 shows that the Top-100 candidate pool achieves a Recall@100 of 76.99\%. Therefore, the next experiment expands the candidate pool from 20 to 50 and 100 documents for both BGE and Mixedbread to test whether higher candidate pool coverage can improve the final Recall@5.
+
+\par\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\centering
+\makeatletter
+\def\@captype{table}
+\makeatother
+\caption{Recall@5 by reranker and candidate pool size.
+The Dense Top-5 baseline achieves 42.13\%.}
+\label{tab:bge-candidate-depth}
+\begin{tabular}{lrrr}
+\hline
+Reranker   & $20\to5$ & $50\to5$ & $100\to5$ \\
+\hline
+BGE        & 47.18\%  & 46.72\%  & 45.58\%   \\
+Mixedbread & 47.32\%  & 45.88\%  & 46.34\%   \\
+\hline
+\end{tabular}
+\end{minipage}
+\par\medskip
+
+The table 7 shows both BGE and Mixedbread achieved lower Recall@5 scores for the Top-50 and Top-100 than their respective Top-20 results. A question-by-question analysis revealed that, for some questions, the top five results included new relevant documents, but for many more questions, relevant documents that had originally ranked in the top five were omitted. This suggests that while expanding the candidate pool provides more relevant documents to choose from, it also introduces candidates with lower relevance. If the re-ranker assigns high scores to these less-relevant candidates, they may displace relevant documents that would otherwise have made it into the top five. Therefore, subsequent experiments combined the rankings from BGE and Mixedbread using the same Dense Top-100 candidate pool to test whether the two approaches could complement each other.
+
+\par\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\centering
+\makeatletter
+\def\@captype{table}
+\makeatother
+\caption{Recall@5 and mean R5 for the Dense Top-5 baseline and
+BGE--Mixedbread rank fusion with two tie-breaking rules.}
+\label{tab:fusion-tiebreak}
+\begin{tabular}{lrrr}
+\hline
+Configuration & Recall@5 & Mean R5 & $\Delta$R5 vs.\ baseline \\
+\hline
+Dense Top-5                       & 42.13\%          & 0.346286          & ---       \\
+Rank fusion (BGE tie-break)        & 49.77\%          & \textbf{0.358714} & +0.012428 \\
+Rank fusion (Mixedbread tie-break) & \textbf{50.49\%} & 0.353714          & +0.007428 \\
+\hline
+\end{tabular}
+\end{minipage}
+\par\medskip
+
+Table 8 shows that under both tie-breaking rules, the Recall@5 of the rank fusion outperforms the Dense Top-5 baseline. Changing the priority ranking from BGE to Mixedbread when breaking ties increased Recall@5 by 0.72 percentage points, while the mean R5 decreased by 0.005. When using Mixedbread alone to rerank the 20 candidate documents, the average R5 was also higher than that of the two fusion schemes. This suggests that while the top five retrieved documents cover more documents labelled as relevant, their answer scores are not necessarily higher.
+
+\subsection{Comparison of Retrieval and Answer Quality}
+\label{sec:quality-comparison}
+
+\par\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\centering
+\makeatletter
+\def\@captype{table}
+\makeatother
+
+\caption{Recall@5, mean R5 and additional reranking wall time for 350
+queries. B denotes BGE and M denotes Mixedbread. For fusion, the letter
+in parentheses identifies the tie-breaker.}
+\label{tab:quality-comparison}
+
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lccccc@{}}
+\hline
+Configuration & Recall@5 & Mean R5 & $\Delta$R5
+    & 95\% CI for $\Delta$R5 & Time (h:m:s) \\
+\hline
+Dense Top-5
+    & 42.13\% & 0.346286 & --- & --- & 00:00:00 \\
+B $20\to5$
+    & 47.18\% & 0.348857 & $+0.002571$
+    & $[-0.0238,\,+0.0281]$ & 00:07:48 \\
+M $20\to5$
+    & 47.32\% & \textbf{0.371190} & $+0.024905$
+    & $[-0.0028,\,+0.0521]$ & 
+    00:03:15
+    \\
+Fusion (B)
+    & 49.77\% & 0.358714 & $+0.012428$
+    & $[-0.0173,\,+0.0421]$ & 00:32:51 \\
+Fusion (M)
+    & \textbf{50.49\%} & 0.353714 & $+0.007428$
+    &  $[-0.0215,\,+0.0362]
+    $ & 
+    00:32:51
+    \\
+Dense-BM25a=0.75
+    &42.13\% & 0.351143 & $+0.004857$
+    &  $[-0.0170,
+    \,+0.0270]
+    $ & 
+    00:01:26
+    \\
+\hline
+\end{tabular}
+
+\par\smallskip
+{\footnotesize $\Delta$R5 is relative to Dense Top-5.
+Confidence intervals use a paired bootstrap.\par}
+\end{minipage}
+\par\medskip
+
+The experimental results illustrate the trade-off between evidence coverage and reranking time. Mixedbread and BGE 20→5 achieves nearly identical Recall@5 values, but Mixedbread’s GPU reranking time is less than half that of BGE. After expanding the candidate pool to 100 documents and combining the two models' rankings through rank fusion, Recall@5 was approximately 3 percentage points higher than that of Mixedbread 20→5, while the estimated reranking time is about 10 times that of Mixedbread 20→5. This cost is disproportionately high relative to the improvement.
+
+The mean R5 scores show different rankings. Dense–BM25 only adjusts the document order of Dense Top-5, so Recall@5 remains unchanged. Its mean R5 increases slightly. In this experiment, both rank fusion variants retrieved more relevant annotated documents, but R5 remained lower than that of Mixedbread 20→5. This indicates that more evidence does not necessarily lead to higher answer quality. Furthermore, since all paired 95\% confidence intervals for $\Delta\mathrm{R5}$ relative to Dense Top-5 include 0, this experiment cannot yet confirm that any configuration improves the mean answer quality.
+
+\section{Discussion and Conclusion}
+\label{sec:conclusion}
+
+Across 350 practice queries, Mixedbread 20→5 struck a good balance between answer quality and reranking time. In contrast, Top-100 rank fusion improved Recall@5, but its estimated re-ranking time was approximately ten times that of Mixedbread 20→5, and the mean R5 for both fusion schemes was lower than that of Mixedbread 20→5. The 95\% confidence intervals for the mean R5 differences between each configuration and Dense Top-5 all include 0; therefore, this experiment cannot yet confirm that reranking improves average answer quality.
+
+In the experiment to expand the candidate pool, the generator still receives only five documents. Newly selected relevant documents may repeat existing facts or replace documents containing key details. Future work could focus on examining queries whererank fusion yields a higher Recall@5 than Mixedbread 20→5, but a lower R5. By comparing the two sets of documents and the generated answers for each question, it is possible to determine whether the information required for the answer was lost during document replacement. If the key information remains in the context, the experiment could fix the question and the five documents, changing only the position of the key document and regenerating the answers to verify whether evidence position affects how often the generator omits this information.
+
+Each reranking scheme uses the same ASR transcription, and the judge model scores the answers based on the transcribed questions and annotated evidence. Therefore, this experiment compares the answer quality of each scheme under the same transcription input. To further assess whether the system can answer the user’s original question, future work could involve extracting a subset of audio recordings, manually verifying the question text, and then re-evaluating the existing answers based on the verified questions.
+
+In terms of cost, subsequent experiments can retain the Mixedbread 20→5 candidate pool and test different inference batch sizes on the same H200 MIG instance. Each configuration uses the same 350 queries and candidate documents, with the same timing window. The experiment will compare the total time taken for reranking, while verifying the top five documents and their order for each query. If a configuration reduces the time taken and the top five documents and their order match those of the reference configuration for every query, it indicates that the configuration can reduce reranking time while preserving the generator’s input.
+
+% References are excluded from the main-body page limit.
+\bibliography{references}
+\bibliographystyle{iclr2027_conference}
+
+% Put your Appendix here if needed. Comment out if you don't need it.
+\appendix
+
+
+\section{Reranking Scripts and Output Files}
+\label{app:reranking-files}
+
+\par\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\centering
+\small
+\makeatletter
+\def\@captype{table}
+\makeatother
+\caption{Repository paths for the reranking experiments.}
+\label{tab:reranking-files}
+\begin{tabular}{@{}p{0.19\linewidth}p{0.39\linewidth}p{0.36\linewidth}@{}}
+\hline
+\textbf{Component} & \textbf{Repository path} & \textbf{Purpose} \\
+\hline
+
+BGE reranking &
+\path{rag/results/bge20-full-3718021.jsonl} &
+Stores the BGE reranking results for the top 20 dense retrieval
+candidates. The source script remains unconfirmed. \\[4pt]
+
+MiniLM reranking &
+\path{rag/extensions/rerank_top5.py} &
+Scores the top 100 dense retrieval candidates with MiniLM for
+standalone reranking and rank fusion. \\[4pt]
+
+Mixedbread reranking &
+\path{rag/results/run_mxbai_fusion350.sh} &
+Scores whole documents with Mixedbread and reports its standalone
+reranking results. \\[4pt]
+
+BGE and Mixedbread rank fusion &
+\path{rag/results/run_mxbai_fusion350.sh} &
+Combines the two models' rankings of the same candidates and saves
+per-query scores and rankings. \\
+
+\hline
+\end{tabular}
+\end{minipage}
+\par\medskip
+\section{Task 1 RoPE Test Output}
+\label{app:task1-rope-output}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{task1_rope_output.png}
+    \caption{Recorded Task 1 RoPE test output on the NVIDIA H200 MIG 1g.18gb partition.}
+    \label{fig:task1-rope-output}
+\end{figure}
+
+\section{Task 3 load count}
+\label{app:task3-loads}
+
+On the \texttt{encoder fc1 + GELU} case, \texttt{results/task3\_baseline.txt} reports 931~GFLOP/s for \texttt{TILE}${}=16$. The same case is 606~GFLOP/s in \texttt{task3\_tile8.txt} and 1071~GFLOP/s in \texttt{task3\_tile32.txt}.
+
+\section{Task 4 warp sweep}
+\label{app:task4-warps}
+
+The encoder case in \texttt{tests/test\_task4\_attention.cu} is \texttt{audio encoder (20 heads, 1500)}: batch 1, 20 heads, 1500 queries and keys, \texttt{head\_dim}${}=64$, not causal. Table~\ref{tab:attn-warps} is the audio-encoder line of each run. The 4-warp row is \texttt{results/task4\_fixed.txt}; the other rows are the matching \texttt{task4\_warps*.txt} logs. The printed GFLOP/s uses $4\times 1\times 20\times 1500\times 1500\times 64=1.152\times 10^{10}$ operations.
+
+\par\medskip
+\noindent
+\begin{minipage}{\linewidth}
+\centering
+\makeatletter
+\def\@captype{table}
+\makeatother
+\caption{Audio encoder on the H200 MIG 1g.18gb partition.}
+\label{tab:attn-warps}
+\begin{tabular}{rrrr}
+\toprule
+Warps & Key loads & Time (ms) & GFLOP/s \\
+\midrule
+1  & 1500 & 246.795 & 47 \\
+2  & 750  & 79.208  & 145 \\
+4  & 375  & 33.166  & 347 \\
+8  & 188  & 24.449  & 471 \\
+16 & 94   & 21.450  & 537 \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\par\medskip
+
+
+% Keep this line unchanged.
+\newpage
+
+
+% Academic integrity is an underlying principle of research and academic practice.
+% All submitted work is expected to be your own, including any material you have
+% generated yourself with the assistance of AI tools such as ELM, ChatGPT,
+% Bing Chat, Claude, Google Gemini, or any other automated assistance.
+% For all such material you must make prominent explicit acknowledgement and
+% explain clearly what you have done in this section.
+% This includes using AI to directly generate text, code, figures or similar
+% or to complete other tasks. In all cases, you remain entirely responsible
+% for the material you produce.
+\section*{AI declaration}
+Please acknowledge your use of AI here.
+
+% Please put the information of your group here without changing the format.
+% This page will be deleted when the report is distributed for reviewing.
+\section*{Group information}
+Group ID: MLS-0057
+
+Information of group member A:
+\begin{itemize}
+    \item Name: Jiaqi Li
+    \item UUN: s2940268
+\end{itemize}
+
+Information of group member B:
+\begin{itemize}
+    \item Name: Xinying Chen
+    \item UUN: s3019828
+\end{itemize}
+% Keep this COMMENTED OUT, unless there is more than one member.
+% Information of group member B:
+% \begin{itemize}
+%     \item Name: John Doe
+%     \item UUN: sXXXXXXX
+% \end{itemize}
+
+% Keep this COMMENTED OUT, unless there is more than one member and you feel like
+% it is necessary to point out the contribution. Please notice that members from
+% the same group technically receive the same score for the report, regardless of
+% the contribution.
+% \section*{Contribution}
+
+\end{document}
