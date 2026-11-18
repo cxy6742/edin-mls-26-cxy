@@ -341,7 +341,7 @@ Retrieval depth $k$ & Repeat 1 & Repeat 5 & R5 difference vs.\ $k=5$ \\
 \par
 \endgroup
 
-Recall rises with depth, from 0.421 at \(k=5\) to 0.770 at \(k=100\), but the Repeat-5 answer score is highest at \(k=5\) (0.346), above \(k=2\), \(k=10\), and \(k=20\). Passing too many documents raises evidence coverage but lowers the answer score, so later answer generation uses the dense top five. One judge repeat changes the score and the gaps, so the comparisons below use the five-repeat mean.
+Recall rises with depth, from 0.421 at \(k=5\) to 0.770 at \(k=100\), but the Repeat-5 answer score is highest at \(k=5\) (0.346), above \(k=2\), \(k=10\), and \(k=20\). Passing too many documents raises evidence coverage but lowers the answer score, so later answer generation uses the dense top five. The judge model is also variable, so each answer is scored five times and the comparisons below use that average.
 
 
 \subsection{Reranking and Evidence Selectiong}
