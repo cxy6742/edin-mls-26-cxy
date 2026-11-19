@@ -3,11 +3,12 @@ set -euo pipefail
 cd "$HOME/edin-mls-26-cxy"
 export PYTHONPATH=rag
 run_python="$HOME/mls-rag-env/bin/python"
-run_dir="rag/results/mixedbread20-whole-answer350"
+run_dir="${M20_OUT:?Please set M20_OUT}"
 mkdir -p "$run_dir"
 
 "$run_python" -u - <<'PY'
 import json
+import os
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -17,7 +18,7 @@ from src.data import CourseData, load_jsonl
 from src.generator import ELMGenerator
 
 root = Path("rag/results")
-run_dir = root / "mixedbread20-whole-answer350"
+run_dir = Path(os.environ["M20_OUT"])
 out = run_dir / "answers.jsonl"
 data = CourseData(Path("rag/data/rag_corpus"))
 qrels = data.load_qrels("practice")
@@ -29,8 +30,10 @@ def read_practice(path):
         raise SystemExit(f"Expected exactly 350 matching practice queries: {path}")
     return by_id
 
-original = read_practice(root / "baseline_all_cpu_350_v1.jsonl")
-ranked = read_practice(root / "mxbai-chunks350-3720077.jsonl")
+original = read_practice(
+    root / "dense20_to5_rerankers/dense/answers.jsonl"
+)
+ranked = read_practice(run_dir / "ranking.jsonl")
 
 for qid, row in ranked.items():
     ids = row["whole_top5"]
@@ -90,7 +93,7 @@ judge_model=$("$run_python" - <<'JUDGE'
 import json
 from pathlib import Path
 
-path = Path("rag/results/bge20-eval-3718056/judge/answer_judge_summary.json")
+path = Path("rag/results/dense20_to5_rerankers/bge/answer_judge_summary.json")
 summary = json.loads(path.read_text(encoding="utf-8"))
 actual = tuple(summary[key] for key in ("split", "queries", "repeats", "question_mode"))
 if actual != ("practice", 350, 5, "transcript"):
