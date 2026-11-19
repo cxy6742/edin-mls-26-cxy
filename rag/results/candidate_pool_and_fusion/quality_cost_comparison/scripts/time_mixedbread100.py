@@ -15,7 +15,10 @@ data = CourseData(Path("rag/data/rag_corpus"))
 qrels = data.load_qrels("practice")
 rows = []
 for shard in range(7):
-    rows.extend(load_jsonl(root / f"bge100-full-3718533-{shard}.jsonl"))
+    rows.extend(load_jsonl(
+    root / "candidate_pool_and_fusion" / "candidate_pool"
+    / f"bge100-full-3718533-{shard}.jsonl"
+))
 
 if len(rows) != 350 or {r["query_id"] for r in rows} != set(qrels) or len(qrels) != 350:
     raise ValueError("Expected all 350 practice queries exactly once")
