@@ -217,7 +217,7 @@ mixedbread 20->5: 250/350
 mixedbread 20->5: 300/350
 mixedbread 20->5: 350/350
 GPU reranking wall time: 180.257 s
-Recall@5: 0.473200 (47.32%)
-Ordered Top-5 matches saved answers: 350/350
+Recall@5: 0.471730 (47.17%)
+Ordered Top-5 matches saved answers: 345/350
 Saved results: rag/results/reranking-v2-3736442/mixedbread20.jsonl
 Saved summary: rag/results/reranking-v2-3736442/mixedbread20_summary.json
