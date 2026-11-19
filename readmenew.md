@@ -54,7 +54,6 @@ MRR@5, so only α = 0.75 was sent to the generator.
 | Tests | `rag/tests/test_rerank_extension.py` |
 | Answers and judge summary | `rag/results/system_extension/rerank/dense_bm25/` |
 | Ordering summaries, including α = 0.25 and 0.50 | `rag/results/system_extension/rerank/dense_bm25/ranking/` |
-| Short result note | `rag/results/system_extension/rerank/dense_bm25/README.md` |
 
 For α = 0.75 and k = 5, Recall@5 stays 42.13%. ΔMRR@5 is −0.003 and
 ΔnDCG@5 is −0.002. Mean R5 is 0.351143 (ΔR5 +0.0049). The paired bootstrap
