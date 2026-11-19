@@ -145,3 +145,7 @@ The original Mixedbread scoring job was 3720050.
 The archived rank_fusion directory contains the original
 scoring results, final rankings, generated answers,
 per-query judge scores, summary results and logs.
+
+### Execution Environment
+
+The GPU timing scripts were originally executed on the university's HPC cluster. Some paths have been updated for the archived repository, but the working directory and Python environment in `submitted.sbatch` must be adapted to the user's local setup before rerunning.
