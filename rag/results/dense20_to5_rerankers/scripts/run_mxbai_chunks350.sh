@@ -23,12 +23,15 @@ qrels = data.load_qrels("practice")
 rows = [
     row
     for shard in range(7)
-    for row in load_jsonl(root / f"bge100-full-3718533-{shard}.jsonl")
+    for row in load_jsonl(
+    root / "candidate_pool_and_fusion/candidate_pool"
+    / f"bge100-full-3718533-{shard}.jsonl"
+)
 ]
 by_id = {row["query_id"]: row for row in rows}
 transcripts = {
     row["query_id"]: row["transcript"]
-    for row in load_jsonl(root / "baseline_all_cpu_350_v1.jsonl")
+    for row in load_jsonl(root / "dense20_to5_rerankers/dense/answers.jsonl")
     if row["query_id"] in qrels
 }
 if len(rows) != 350 or len(qrels) != 350 or by_id.keys() != qrels.keys():
@@ -82,7 +85,8 @@ whole_recalls, chunk_recalls = [], []
 whole_times, chunk_times = [], []
 truncated_docs = gained = lost = 0
 chunk_counts = []
-output = root / f"mxbai-chunks350-{os.environ['SLURM_JOB_ID']}.jsonl"
+output = Path(os.environ["M20_OUT"]) / "ranking.jsonl"
+output.parent.mkdir(parents=True, exist_ok=True)
 
 with output.open("x", encoding="utf-8") as stream:
     for index, qid in enumerate(sample, 1):
