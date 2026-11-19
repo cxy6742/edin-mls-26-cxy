@@ -1,0 +1,28 @@
+{
+  "model": "BAAI/bge-reranker-v2-m3",
+  "depth": 20,
+  "batch_size": 16,
+  "max_length": 512,
+  "gpu": "NVIDIA H200 MIG 1g.18gb",
+  "job_id": "3736442",
+  "python": "3.11.18",
+  "torch": "2.14.1+cu130",
+  "sentence_transformers": "6.2.0",
+  "cuda": "13.0",
+  "input_sha256": {
+    "rag/results/dense20_to5_rerankers/dense/answers.jsonl": "6eced37bcef8b9243b64416526ec39536caa45bacba446b0f8ffa66c583ce88e",
+    "rag/results/depth_k20_practice350.jsonl": "6ac67241f3d5f46a33436f726989292c3f2d8cd9d2f734a3a33d6e81a7f62a23",
+    "rag/results/bge100-full-3718533-0.jsonl": "3f821216b855c10db5fe815336a9d665d751a3d0e0597f5633e796652c2cfe37",
+    "rag/results/bge100-full-3718533-1.jsonl": "739fb52a3573f405187c6f704a2a786017f1ecfff8a6df30d66becd35c6884a6",
+    "rag/results/bge100-full-3718533-2.jsonl": "281c9b00a50f1f47a2611c44a7a67cbf1e23f7d6f39beb38d3c345fa4638ce17",
+    "rag/results/bge100-full-3718533-3.jsonl": "4d8066a6ba80265369d53d357a5017e28225c950ac13fb8c725dad1652a45771",
+    "rag/results/bge100-full-3718533-4.jsonl": "a562f4f3453066247276fad05e4e08665704dbaee2c518984660f1e2c83676bf",
+    "rag/results/bge100-full-3718533-5.jsonl": "c2a5584710f0802a9f39d806c7fdfd06ffccb4f8742ea2a9cef8f5a953672798",
+    "rag/results/bge100-full-3718533-6.jsonl": "250e7cd2df086a4174f22b084968b62583e3afc31a798eda788ce4aa551d96db"
+  },
+  "queries": 350,
+  "reranking_wall_seconds": 448.5636098359246,
+  "mean_recall_at_5": 0.4717567511853226,
+  "ordered_top5_matches": 350,
+  "mismatched_query_ids": []
+}

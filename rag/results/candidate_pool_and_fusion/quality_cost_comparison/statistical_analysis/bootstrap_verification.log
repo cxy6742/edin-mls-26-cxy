@@ -1,0 +1,36 @@
+Queries: 350
+Bootstrap repetitions: 10000
+Random seed: 42
+Dense mean: 0.346286
+
+BGE 20-to-5
+Mean R5: 0.348857
+Delta R5: +0.002571
+Recomputed CI: [-0.023192, +0.028381]
+Previously reported CI: (-0.0238, 0.0281)
+Rounded match: False
+Contains zero: True
+
+Mixedbread 20-to-5
+Mean R5: 0.371190
+Delta R5: +0.024905
+Recomputed CI: [-0.002762, +0.052098]
+Previously reported CI: (-0.0028, 0.0521)
+Rounded match: True
+Contains zero: True
+
+Fusion BGE tie-break
+Mean R5: 0.358714
+Delta R5: +0.012429
+Recomputed CI: [-0.016429, +0.040715]
+Previously reported CI: (-0.0173, 0.0421)
+Rounded match: False
+Contains zero: True
+
+Fusion Mixedbread tie-break
+Mean R5: 0.353714
+Delta R5: +0.007429
+Recomputed CI: [-0.021525, +0.036239]
+Previously reported CI: (-0.0215, 0.0362)
+Rounded match: True
+Contains zero: True

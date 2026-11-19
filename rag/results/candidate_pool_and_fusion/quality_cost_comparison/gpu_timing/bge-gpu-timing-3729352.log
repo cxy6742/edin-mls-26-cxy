@@ -1,0 +1,21 @@
+GPU: NVIDIA H200 MIG 1g.18gb
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/393 [00:00<?, ?it/s]Loading weights:   1%|          | 4/393 [00:00<00:13, 28.19it/s]Loading weights:   4%|▍         | 17/393 [00:00<00:05, 67.52it/s]Loading weights:   7%|▋         | 28/393 [00:00<00:04, 75.16it/s]Loading weights:  11%|█         | 42/393 [00:00<00:06, 58.16it/s]Loading weights:  13%|█▎        | 50/393 [00:00<00:05, 60.66it/s]Loading weights:  15%|█▍        | 57/393 [00:01<00:07, 42.14it/s]Loading weights:  18%|█▊        | 72/393 [00:01<00:05, 56.99it/s]Loading weights:  20%|██        | 79/393 [00:01<00:09, 31.42it/s]Loading weights:  26%|██▋       | 104/393 [00:01<00:05, 56.24it/s]Loading weights:  29%|██▉       | 113/393 [00:02<00:05, 50.25it/s]Loading weights:  31%|███       | 121/393 [00:02<00:05, 50.38it/s]Loading weights:  33%|███▎      | 128/393 [00:02<00:04, 53.03it/s]Loading weights:  36%|███▌      | 141/393 [00:02<00:03, 63.72it/s]Loading weights:  38%|███▊      | 149/393 [00:02<00:05, 47.34it/s]Loading weights:  44%|████▍     | 172/393 [00:03<00:03, 55.48it/s]Loading weights:  46%|████▌     | 179/393 [00:03<00:03, 55.51it/s]Loading weights:  47%|████▋     | 186/393 [00:03<00:04, 44.51it/s]Loading weights:  51%|█████     | 201/393 [00:04<00:05, 32.61it/s]Loading weights:  57%|█████▋    | 223/393 [00:04<00:03, 50.95it/s]Loading weights:  59%|█████▉    | 232/393 [00:04<00:04, 39.46it/s]Loading weights:  61%|██████    | 239/393 [00:05<00:04, 34.64it/s]Loading weights:  62%|██████▏   | 245/393 [00:05<00:04, 29.67it/s]Loading weights:  65%|██████▍   | 254/393 [00:05<00:04, 29.11it/s]Loading weights:  72%|███████▏  | 282/393 [00:05<00:01, 58.19it/s]Loading weights:  75%|███████▍  | 293/393 [00:06<00:01, 64.45it/s]Loading weights:  77%|███████▋  | 304/393 [00:06<00:02, 40.37it/s]Loading weights:  79%|███████▉  | 312/393 [00:06<00:01, 42.94it/s]Loading weights:  83%|████████▎ | 328/393 [00:06<00:01, 56.16it/s]Loading weights:  88%|████████▊ | 345/393 [00:07<00:00, 72.38it/s]Loading weights:  91%|█████████ | 356/393 [00:07<00:00, 69.97it/s]Loading weights:  93%|█████████▎| 366/393 [00:07<00:00, 47.97it/s]Loading weights:  97%|█████████▋| 382/393 [00:07<00:00, 53.37it/s]Loading weights: 100%|██████████| 393/393 [00:07<00:00, 49.72it/s]
+BGE 20->5: 50/350
+BGE 20->5: 100/350
+BGE 20->5: 150/350
+BGE 20->5: 200/350
+BGE 20->5: 250/350
+BGE 20->5: 300/350
+BGE 20->5: 350/350
+BGE 20->5 GPU reranking wall time: 467.619 s
+BGE 20->5 GPU Recall@5: 0.471757 (47.18%)
+BGE 100->5: 50/350
+BGE 100->5: 100/350
+BGE 100->5: 150/350
+BGE 100->5: 200/350
+BGE 100->5: 250/350
+BGE 100->5: 300/350
+BGE 100->5: 350/350
+BGE 100->5 GPU reranking wall time: 1386.130 s
+BGE 100->5 GPU Recall@5: 0.455830 (45.58%)

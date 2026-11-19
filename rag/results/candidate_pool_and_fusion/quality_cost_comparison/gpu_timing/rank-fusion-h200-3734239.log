@@ -1,0 +1,14 @@
+Loading saved scores...
+Validated 350 queries and 100 candidates each.
+
+=== BGE tie-break ===
+Queries: 350
+Recall@5: 0.497682 (49.77%)
+Fusion CPU wall time: 0.005716 s
+Estimated combined time: 1970.646716 s
+
+=== Mixedbread tie-break ===
+Queries: 350
+Recall@5: 0.504920 (50.49%)
+Fusion CPU wall time: 0.005699 s
+Estimated combined time: 1970.646699 s
