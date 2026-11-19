@@ -6,7 +6,10 @@ __pycache__/
 .cache/
 .venv/
 venv/
-results/
+results/**
+!results/**/
+!results/**/README.md
+!results/**/*summary.json
 *.log
 .pytest_cache/
 *.aux
