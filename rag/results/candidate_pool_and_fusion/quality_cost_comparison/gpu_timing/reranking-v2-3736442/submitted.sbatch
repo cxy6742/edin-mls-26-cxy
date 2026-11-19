@@ -17,7 +17,7 @@ export MKL_NUM_THREADS="$SLURM_CPUS_PER_TASK"
 
 out="rag/results/reranking-v2-${SLURM_JOB_ID}"
 mkdir "$out"
-cp rag/results/timing_scripts/measure_reranking_v2.py "$out/"
+cp rag/results/candidate_pool_and_fusion/quality_cost_comparison/gpu_timing/reranking-v2-3736442/measure_reranking_v2.py "$out/"
 cp "$0" "$out/submitted.sbatch"
 
 hostname
