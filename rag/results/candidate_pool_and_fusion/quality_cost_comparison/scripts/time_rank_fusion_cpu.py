@@ -17,12 +17,16 @@ bge_rows = [
     row
     for shard in range(7)
     for row in load_jsonl(
-        root / f"bge100-full-3718533-{shard}.jsonl"
+        root / "candidate_pool_and_fusion" / "candidate_pool"
+        / f"bge100-full-3718533-{shard}.jsonl"
     )
 ]
 
 mixed_rows = list(
-    load_jsonl(root / "mxbai-fusion350-3720050.jsonl")
+    load_jsonl(
+        root / "candidate_pool_and_fusion" / "rank_fusion"
+        / "scoring" / "mxbai-fusion350-3720050.jsonl"
+    )
 )
 
 bge_by_query = {
