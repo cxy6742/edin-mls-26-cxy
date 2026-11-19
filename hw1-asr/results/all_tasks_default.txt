@@ -1,0 +1,69 @@
+nvcc -O3 -std=c++17 -lineinfo -diag-suppress 177 -arch=sm_90 -Xcompiler -fPIC -Icsrc -c csrc/task1_rope.cu -o build/sm_90/obj/task1_rope.o
+nvcc -O3 -std=c++17 -lineinfo -diag-suppress 177 -arch=sm_90 -Xcompiler -fPIC -Icsrc -c csrc/task2_reduce.cu -o build/sm_90/obj/task2_reduce.o
+nvcc -O3 -std=c++17 -lineinfo -diag-suppress 177 -arch=sm_90 -Xcompiler -fPIC -Icsrc -c csrc/task3_gemm.cu -o build/sm_90/obj/task3_gemm.o
+nvcc -O3 -std=c++17 -lineinfo -diag-suppress 177 -arch=sm_90 -Xcompiler -fPIC -Icsrc -c csrc/task4_attention.cu -o build/sm_90/obj/task4_attention.o
+nvcc -O3 -std=c++17 -lineinfo -diag-suppress 177 -arch=sm_90 -Xcompiler -fPIC -Icsrc -c csrc/provided.cu -o build/sm_90/obj/provided.o
+nvcc -O3 -std=c++17 -lineinfo -diag-suppress 177 -arch=sm_90 -Xcompiler -fPIC -Icsrc -shared build/sm_90/obj/task1_rope.o build/sm_90/obj/task2_reduce.o build/sm_90/obj/task3_gemm.o build/sm_90/obj/task4_attention.o build/sm_90/obj/provided.o -o build/sm_90/libasr_kernels.so
+nvcc -O3 -std=c++17 -lineinfo -diag-suppress 177 -arch=sm_90 -Xcompiler -fPIC -Icsrc tests/test_task1_rope.cu build/sm_90/obj/task1_rope.o build/sm_90/obj/task2_reduce.o build/sm_90/obj/task3_gemm.o build/sm_90/obj/task4_attention.o build/sm_90/obj/provided.o -o build/sm_90/test_task1_rope -lcublas -Xlinker -rpath -Xlinker /opt/cuda-12.8.0/lib64
+nvcc -O3 -std=c++17 -lineinfo -diag-suppress 177 -arch=sm_90 -Xcompiler -fPIC -Icsrc tests/test_task2_reduce.cu build/sm_90/obj/task1_rope.o build/sm_90/obj/task2_reduce.o build/sm_90/obj/task3_gemm.o build/sm_90/obj/task4_attention.o build/sm_90/obj/provided.o -o build/sm_90/test_task2_reduce -lcublas -Xlinker -rpath -Xlinker /opt/cuda-12.8.0/lib64
+nvcc -O3 -std=c++17 -lineinfo -diag-suppress 177 -arch=sm_90 -Xcompiler -fPIC -Icsrc tests/test_task3_gemm.cu build/sm_90/obj/task1_rope.o build/sm_90/obj/task2_reduce.o build/sm_90/obj/task3_gemm.o build/sm_90/obj/task4_attention.o build/sm_90/obj/provided.o -o build/sm_90/test_task3_gemm -lcublas -Xlinker -rpath -Xlinker /opt/cuda-12.8.0/lib64
+nvcc -O3 -std=c++17 -lineinfo -diag-suppress 177 -arch=sm_90 -Xcompiler -fPIC -Icsrc tests/test_task4_attention.cu build/sm_90/obj/task1_rope.o build/sm_90/obj/task2_reduce.o build/sm_90/obj/task3_gemm.o build/sm_90/obj/task4_attention.o build/sm_90/obj/provided.o -o build/sm_90/test_task4_attention -lcublas -Xlinker -rpath -Xlinker /opt/cuda-12.8.0/lib64
+GPU: NVIDIA H200 MIG 1g.18gb (sm_90), 16 SMs, peak memory bandwidth about 563 GB/s
+
+tiny (2 x 3 tokens, Hq=3, Hk=1)      PASS  max_err=1.03e-07     0.002 ms      0.7 GB/s ( 0% of peak)
+odd sizes, partial rotation          PASS  max_err=1.02e-07     0.002 ms      7.2 GB/s ( 1% of peak)
+audio encoder (partial, 32/64)       PASS  max_err=1.91e-07     0.053 ms    289.2 GB/s (51% of peak)
+text decoder (GQA 16/4, full)        PASS  max_err=1.73e-07     0.006 ms    207.7 GB/s (37% of peak)
+
+Task 1 (RoPE): ALL PASS
+GPU: NVIDIA H200 MIG 1g.18gb (sm_90), 16 SMs, peak memory bandwidth about 563 GB/s
+
+rmsnorm, one short row               PASS  max_err=8.27e-08     0.002 ms      0.1 GB/s ( 0% of peak)
+rmsnorm, odd cols                    PASS  max_err=3.68e-07     0.003 ms     11.9 GB/s ( 2% of peak)
+rmsnorm, text decoder                PASS  max_err=4.35e-07     0.005 ms    206.3 GB/s (37% of peak)
+layernorm, odd cols (example)        PASS  max_err=3.91e-07     0.004 ms     10.3 GB/s ( 2% of peak)
+layernorm, audio encoder             PASS  max_err=5.42e-07     0.061 ms    253.2 GB/s (45% of peak)
+softmax, one short row               PASS  max_err=1.11e-08     0.003 ms      0.0 GB/s ( 0% of peak)
+softmax, odd cols                    PASS  max_err=1.04e-09     0.003 ms      7.1 GB/s ( 1% of peak)
+softmax, large inputs (+-100)        PASS  max_err=2.67e-08     0.004 ms      4.2 GB/s ( 1% of peak)
+softmax, all negative (-200..-150)   PASS  max_err=6.11e-09     0.003 ms      1.8 GB/s ( 0% of peak)
+softmax, vocabulary row (59264)      PASS  max_err=8.13e-11     0.096 ms      4.9 GB/s ( 1% of peak)
+softmax, 64 x 4096                   PASS  max_err=7.95e-10     0.009 ms    233.2 GB/s (41% of peak)
+
+Task 2 (reductions): ALL PASS
+GPU: NVIDIA H200 MIG 1g.18gb (sm_90), 16 SMs, peak memory bandwidth about 563 GB/s
+
+tiny 3 x 5, K = 7                    PASS  max_err=9.76e-09     0.002 ms        0 GFLOP/s
+    for comparison: naive      0 GFLOP/s, cuBLAS      0 GFLOP/s (CPU reference)
+odd sizes 37 x 100, K = 33, bias     PASS  max_err=1.55e-07     0.003 ms       78 GFLOP/s
+    for comparison: naive     67 GFLOP/s, cuBLAS     42 GFLOP/s (CPU reference)
+odd sizes, bias + GELU               PASS  max_err=7.70e-07     0.005 ms      186 GFLOP/s
+    for comparison: naive    127 GFLOP/s, cuBLAS    152 GFLOP/s (CPU reference)
+decoder q_proj (64x2048x2048)        PASS  max_err=1.14e-05     0.611 ms      879 GFLOP/s
+    for comparison: naive    111 GFLOP/s, cuBLAS   4232 GFLOP/s (cuBLAS reference)
+decoder gate_proj (64x6144x2048)     PASS  max_err=0.00e+00     1.767 ms      911 GFLOP/s
+    for comparison: naive    111 GFLOP/s, cuBLAS   4131 GFLOP/s (cuBLAS reference)
+decoder down_proj (64x2048x6144)     PASS  max_err=3.72e-05     1.828 ms      881 GFLOP/s
+    for comparison: naive    109 GFLOP/s, cuBLAS   5173 GFLOP/s (cuBLAS reference)
+lm_head, last token (1x59264x2048)   PASS  max_err=1.24e-05     4.060 ms       60 GFLOP/s
+    for comparison: naive     58 GFLOP/s, cuBLAS    260 GFLOP/s (cuBLAS reference)
+encoder q_proj (1500x1280x1280)      PASS  max_err=1.01e-05     5.261 ms      934 GFLOP/s
+    for comparison: naive    111 GFLOP/s, cuBLAS   4982 GFLOP/s (cuBLAS reference)
+encoder fc1 + GELU (1500x5120x1280)  PASS  max_err=6.92e-07    21.116 ms      931 GFLOP/s
+    for comparison: naive    110 GFLOP/s, cuBLAS   6186 GFLOP/s (cuBLAS reference)
+conv2 via im2col (1500x1280x3840)    PASS  max_err=2.57e-05    16.022 ms      920 GFLOP/s
+    for comparison: naive    110 GFLOP/s, cuBLAS   5861 GFLOP/s (cuBLAS reference)
+
+Task 3 (tiled GEMM): ALL PASS
+GPU: NVIDIA H200 MIG 1g.18gb (sm_90), 16 SMs, peak memory bandwidth about 563 GB/s
+
+tiny, one tile (4 queries, 5 keys)   PASS  max_err=1.11e-07     0.007 ms        0 GFLOP/s
+several tiles, peaky scores          PASS  max_err=4.97e-07     0.026 ms        9 GFLOP/s
+GQA 4 heads / 2 kv heads             PASS  max_err=1.30e-07     0.012 ms       48 GFLOP/s
+causal, seq_q = seq_k                PASS  max_err=4.86e-07     0.055 ms       46 GFLOP/s
+causal, 5 new queries, 37 keys       PASS  max_err=1.78e-07     0.013 ms       14 GFLOP/s
+causal, one new query                PASS  max_err=3.39e-07     0.053 ms       11 GFLOP/s
+text decoder (GQA 16/4, causal)      PASS  max_err=5.21e-07     0.115 ms      146 GFLOP/s
+audio encoder (20 heads, 1500)       PASS  max_err=2.68e-07    33.180 ms      347 GFLOP/s
+
+Task 4 (attention): ALL PASS
