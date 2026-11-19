@@ -41,7 +41,9 @@ depth20_path = root / "depth_k20_practice350.jsonl"
 depth20 = indexed(depth20_path)
 
 shard_paths = [
-    root / f"bge100-full-3718533-{i}.jsonl" for i in range(7)
+    root / "candidate_pool_and_fusion" / "candidate_pool"
+    / f"bge100-full-3718533-{i}.jsonl"
+    for i in range(7)
 ]
 rows100 = [
     row for path in shard_paths for row in load_jsonl(path)
