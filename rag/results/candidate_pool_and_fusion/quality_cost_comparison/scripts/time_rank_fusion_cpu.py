@@ -120,7 +120,7 @@ for tie_break in ("BGE", "Mixedbread"):
         times.append(perf_counter() - start)
 
     fusion_time = median(times)
-    estimated_total = 1386.130 + 584.511 + fusion_time
+    estimated_total = 1465.928 + 584.511 + fusion_time
 
     print(f"\n=== {tie_break} tie-break ===")
     print(f"Queries: {len(results)}")
