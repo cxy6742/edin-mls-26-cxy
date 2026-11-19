@@ -8,7 +8,7 @@ GPU: NVIDIA H200 MIG 1g.18gb
 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
 /home/s2940268/mls-rag-env/lib/python3.11/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
   warnings.warn(
-Loading weights:   0%|          | 0/394 [00:00<?, ?it/s]Loading weights: 100%|██████████| 394/394 [00:00<00:00, 9285.79it/s]
+Loading weights:   0%|          | 0/394 [00:00<?, ?it/s]Loading weights: 100%|██████████| 394/394 [00:00<00:00, 9285.79it/s]
 [startup] starting timed reranking
 Mixedbread 20->5: 50/350
 Mixedbread 20->5: 100/350
@@ -18,6 +18,4 @@ Mixedbread 20->5: 250/350
 Mixedbread 20->5: 300/350
 Mixedbread 20->5: 350/350
 Mixedbread 20->5 GPU reranking wall time: 195.344 s
-Mixedbread 20->5 GPU Recall@5: 0.471730 (47.17%)
-Ordered Top-5 matches original run: 346/350
 Saved results: rag/results/mxbai20-h200-timing-3729831.jsonl
