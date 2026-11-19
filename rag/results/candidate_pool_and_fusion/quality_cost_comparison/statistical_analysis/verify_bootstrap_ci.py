@@ -26,7 +26,7 @@ def load(path):
 dense = load(rerank / "dense/answer_judge_per_query.jsonl")
 
 original_dense = load(
-    root / "baseline_all_cpu_350_judge_v1/answer_judge_per_query.jsonl"
+    root / "system_extension/retrieval_depth/repeat5_practice350/k5_per_query.jsonl"
 )
 
 assert dense == original_dense
