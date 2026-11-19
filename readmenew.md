@@ -56,7 +56,7 @@ MRR@5, so only α = 0.75 was sent to the generator.
 | Ordering summaries, including α = 0.25 and 0.50 | `rag/results/system_extension/rerank/dense_bm25/ranking/` |
 
 For α = 0.75 and k = 5, Recall@5 stays 42.13%. ΔMRR@5 is −0.003 and
-ΔnDCG@5 is −0.002. Mean R5 is 0.351143 (ΔR5 +0.0049). The paired bootstrap
+ΔnDCG@5 is −0.002. Mean R5 is 0.351143 (ΔR5 +0.0049). The paired
 95% CI is [−0.0170, +0.0270]. Extra time is 1 minute 26 seconds.
 
 ## Method 2: select five documents from a larger pool
